@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, type Variants } from 'framer-motion'
 import { weddingConfig } from '../wedding.config'
+import { resolveInvite } from '../invite'
 import { EngagementSection } from './EngagementSection'
 import { FunctionSection } from './FunctionSection'
 import { StorySection } from './StorySection'
@@ -10,7 +11,7 @@ import { GuestbookSection } from './GuestbookSection'
 import { RSVPSection } from './RSVPSection'
 import { NavDots } from './NavDots'
 
-const SLIDE_MS = 10_000
+const SLIDE_MS = 15_000
 
 /** 3D coverflow-style slide transition, direction-aware. */
 const variants: Variants = {
@@ -36,8 +37,8 @@ const variants: Variants = {
   }),
 }
 
-/** Ornate rotated-diamond edge arrow. */
-function EdgeArrow({
+/** Ornate rotated-diamond prev/next button (desktop control bar). */
+function DiamondArrow({
   dir,
   label,
   onClick,
@@ -51,15 +52,11 @@ function EdgeArrow({
     <button
       type="button"
       onClick={onClick}
+      title={label}
       aria-label={next ? `Next: ${label}` : `Previous: ${label}`}
-      className={`group fixed top-1/2 z-40 flex -translate-y-1/2 cursor-pointer flex-col items-center gap-2 ${
-        next ? 'right-2 sm:right-5' : 'left-2 sm:left-5'
-      }`}
+      className="group hidden cursor-pointer sm:block"
     >
-      <span className="h-1.5 w-1.5 rotate-45 bg-royal-gold/50 transition-colors group-hover:bg-royal-gold" />
-      <span
-        className="relative flex h-9 w-9 rotate-45 items-center justify-center border border-royal-gold/50 bg-black/30 backdrop-blur-sm transition-all duration-300 group-hover:border-royal-gold group-hover:bg-royal-gold group-hover:shadow-[0_0_24px_rgba(201,162,39,0.6)] sm:h-11 sm:w-11"
-      >
+      <span className="flex h-10 w-10 rotate-45 items-center justify-center border border-royal-gold/50 bg-black/30 backdrop-blur-sm transition-all duration-300 group-hover:border-royal-gold group-hover:bg-royal-gold group-hover:shadow-[0_0_20px_rgba(201,162,39,0.55)]">
         <svg
           viewBox="0 0 24 24"
           className={`h-4 w-4 -rotate-45 text-royal-gold-light transition-colors group-hover:text-royal-maroon-deep ${
@@ -72,39 +69,48 @@ function EdgeArrow({
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </span>
-      <span className="h-1.5 w-1.5 rotate-45 bg-royal-gold/50 transition-colors group-hover:bg-royal-gold" />
-      {/* label on hover (desktop) */}
-      <span
-        className={`pointer-events-none absolute top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded bg-royal-maroon-deep/85 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-royal-gold-light opacity-0 transition-opacity duration-200 group-hover:opacity-100 lg:block ${
-          next ? 'right-full mr-3' : 'left-full ml-3'
-        }`}
-      >
-        {label}
-      </span>
     </button>
   )
 }
 
 /**
- * Auto-playing full-screen carousel of invitation slides. Advances every
- * 15s with a progress ring; supports pause/play, ornate edge arrows,
- * clickable side dots, arrow keys, spacebar (pause) and swipe. A persistent
- * RSVP button rides along on every slide.
+ * Auto-playing full-screen carousel of invitation slides.
+ *
+ * Which slides appear is decided by the invite link (see src/invite.ts):
+ * the guest's functions come first (so they land straight on Engagement or
+ * whatever their invite starts with), then the optional extras, then RSVP.
+ *
+ * Controls — desktop: prev / pause / next cluster at bottom + side dots;
+ * mobile: swipe gestures + tappable pagination diamonds + pause.
  */
 export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void }) {
-  const slides = [
-    { id: 'story', label: weddingConfig.loveStory.title, node: <StorySection /> },
-    ...weddingConfig.functions.map((fn) => ({
+  const invite = useMemo(() => resolveInvite(), [])
+
+  const slides = useMemo(() => {
+    const functionSlides = invite.functions.map((fn) => ({
       id: fn.id,
       label: fn.name,
       node:
         fn.id === 'engagement' ? <EngagementSection fn={fn} /> : <FunctionSection fn={fn} />,
-    })),
-    { id: 'photobook', label: weddingConfig.photobook.title, node: <PhotobookSection /> },
-    { id: 'info', label: weddingConfig.guestInfo.title, node: <GuestInfoSection /> },
-    { id: 'wishes', label: 'Wishes', node: <GuestbookSection /> },
-    { id: 'rsvp', label: 'RSVP', node: <RSVPSection onReplayEntry={onReplayEntry} /> },
-  ]
+    }))
+
+    const extraSlides = {
+      story: { id: 'story', label: weddingConfig.loveStory.title, node: <StorySection /> },
+      photobook: {
+        id: 'photobook',
+        label: weddingConfig.photobook.title,
+        node: <PhotobookSection />,
+      },
+      info: { id: 'info', label: weddingConfig.guestInfo.title, node: <GuestInfoSection /> },
+      wishes: { id: 'wishes', label: 'Wishes', node: <GuestbookSection /> },
+    } as const
+
+    return [
+      ...functionSlides,
+      ...invite.extras.map((e) => extraSlides[e]),
+      { id: 'rsvp', label: 'RSVP', node: <RSVPSection onReplayEntry={onReplayEntry} /> },
+    ]
+  }, [invite, onReplayEntry])
 
   const [[index, dir], setIndexDir] = useState<[number, number]>([0, 0])
   const [paused, setPaused] = useState(false)
@@ -201,6 +207,7 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
         </motion.button>
       )}
 
+      {/* side dots (desktop only) */}
       <NavDots
         sections={slides.map(({ id, label }) => ({ id, label }))}
         activeId={slides[index].id}
@@ -210,42 +217,66 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
         }}
       />
 
-      {/* ornate edge arrows */}
-      <EdgeArrow dir={-1} label={prevLabel} onClick={() => go(index - 1, -1)} />
-      <EdgeArrow dir={1} label={nextLabel} onClick={() => go(index + 1, 1)} />
+      {/* bottom control bar */}
+      <div className="absolute bottom-4 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-3 sm:bottom-5">
+        {/* mobile pagination diamonds (swipe also works) */}
+        <div className="flex items-center gap-2.5 sm:hidden">
+          {slides.map((s, i) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => i !== index && go(i, i > index ? 1 : -1)}
+              aria-label={`Go to ${s.label}`}
+              aria-current={i === index || undefined}
+              className="p-1"
+            >
+              <span
+                className={`block h-2 w-2 rotate-45 border transition-all duration-300 ${
+                  i === index
+                    ? 'scale-125 border-royal-gold bg-royal-gold shadow-[0_0_8px_rgba(201,162,39,0.8)]'
+                    : 'border-royal-gold/50 bg-transparent'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
 
-      {/* pause/play with progress ring */}
-      <div className="absolute bottom-5 left-1/2 z-40 -translate-x-1/2">
-        <button
-          type="button"
-          onClick={() => setPaused((p) => !p)}
-          aria-label={paused ? 'Play slideshow' : 'Pause slideshow'}
-          className="relative flex h-13 w-13 cursor-pointer items-center justify-center rounded-full border border-royal-gold/60 bg-royal-maroon-deep/85 text-royal-gold-light backdrop-blur-sm transition-transform hover:scale-105 active:scale-95"
-        >
-          <svg viewBox="0 0 48 48" className="absolute inset-0 h-full w-full -rotate-90">
-            <circle cx="24" cy="24" r="21" fill="none" stroke="#c9a22733" strokeWidth="2.5" />
-            <circle
-              cx="24"
-              cy="24"
-              r="21"
-              fill="none"
-              stroke="#c9a227"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeDasharray={C}
-              strokeDashoffset={C * (1 - (paused ? 0 : progress))}
-            />
-          </svg>
-          {paused ? (
-            <svg viewBox="0 0 24 24" className="relative h-5 w-5" fill="currentColor">
-              <path d="M8 5.5v13l11-6.5z" />
+        <div className="flex items-center gap-4">
+          <DiamondArrow dir={-1} label={prevLabel} onClick={() => go(index - 1, -1)} />
+
+          <button
+            type="button"
+            onClick={() => setPaused((p) => !p)}
+            aria-label={paused ? 'Play slideshow' : 'Pause slideshow'}
+            className="relative flex h-13 w-13 cursor-pointer items-center justify-center rounded-full border border-royal-gold/60 bg-royal-maroon-deep/85 text-royal-gold-light backdrop-blur-sm transition-transform hover:scale-105 active:scale-95"
+          >
+            <svg viewBox="0 0 48 48" className="absolute inset-0 h-full w-full -rotate-90">
+              <circle cx="24" cy="24" r="21" fill="none" stroke="#c9a22733" strokeWidth="2.5" />
+              <circle
+                cx="24"
+                cy="24"
+                r="21"
+                fill="none"
+                stroke="#c9a227"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeDasharray={C}
+                strokeDashoffset={C * (1 - (paused ? 0 : progress))}
+              />
             </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" className="relative h-5 w-5" fill="currentColor">
-              <path d="M7 5h4v14H7zM13 5h4v14h-4z" />
-            </svg>
-          )}
-        </button>
+            {paused ? (
+              <svg viewBox="0 0 24 24" className="relative h-5 w-5" fill="currentColor">
+                <path d="M8 5.5v13l11-6.5z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="relative h-5 w-5" fill="currentColor">
+                <path d="M7 5h4v14H7zM13 5h4v14h-4z" />
+              </svg>
+            )}
+          </button>
+
+          <DiamondArrow dir={1} label={nextLabel} onClick={() => go(index + 1, 1)} />
+        </div>
       </div>
     </div>
   )

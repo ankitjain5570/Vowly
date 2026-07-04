@@ -1,203 +1,278 @@
-import { useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { weddingConfig } from '../wedding.config'
-import { BackgroundPattern } from '../theme/patterns'
+import { GodRays, GoldDust, PalaceSilhouette } from './royal'
 
 interface EntryScreenProps {
-  showCover: boolean
-  setShowCover: (show: boolean) => void
-  audioElement: HTMLAudioElement | null
+  /** Called on the opening tap (a user gesture) — App starts the music here */
+  onOpen: () => void
+  /** Called when the opening animation finishes — App swaps to the carousel */
   onTransitionTrigger: () => void
 }
 
+/** Deterministic pseudo-random in [0,1). */
+function prand(i: number, salt: number): number {
+  const x = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453
+  return x - Math.floor(x)
+}
+
+/** Marigold petals + gold sparkles that burst when the book opens. */
+function OpeningBurst() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+      {/* petals raining from the top */}
+      {Array.from({ length: 16 }).map((_, i) => (
+        <motion.svg
+          key={`p${i}`}
+          viewBox="0 0 20 20"
+          style={{
+            position: 'absolute',
+            left: `${prand(i, 1) * 100}%`,
+            top: -30,
+            width: 12 + prand(i, 2) * 12,
+          }}
+          initial={{ y: 0, opacity: 0 }}
+          animate={{ y: '110vh', opacity: [0, 1, 1, 0.6], rotate: 200 + prand(i, 3) * 300 }}
+          transition={{ duration: 2.6 + prand(i, 4) * 1.6, delay: prand(i, 5) * 0.7, ease: 'easeIn' }}
+        >
+          {Array.from({ length: 6 }).map((_, p) => {
+            const a = (p * Math.PI) / 3
+            return (
+              <circle
+                key={p}
+                cx={10 + 5 * Math.cos(a)}
+                cy={10 + 5 * Math.sin(a)}
+                r="4"
+                fill={p % 2 ? '#F5A623' : '#E9A319'}
+                opacity="0.85"
+              />
+            )
+          })}
+          <circle cx="10" cy="10" r="3" fill="#FFD95E" />
+        </motion.svg>
+      ))}
+      {/* sparkle ring radiating from the book */}
+      <div className="absolute left-1/2 top-1/2">
+        {Array.from({ length: 14 }).map((_, i) => {
+          const a = (i * 2 * Math.PI) / 14
+          return (
+            <motion.span
+              key={`s${i}`}
+              className="absolute h-2 w-2 rotate-45"
+              style={{ backgroundColor: i % 2 ? '#E8CF7A' : '#F5E08A' }}
+              initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+              animate={{
+                x: Math.cos(a) * (130 + (i % 3) * 50),
+                y: Math.sin(a) * (130 + (i % 3) * 50),
+                opacity: [0, 1, 0],
+                scale: [0, 1.4, 0.2],
+              }}
+              transition={{ duration: 1.3, delay: 0.5, ease: 'easeOut' }}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 /**
- * Opening full-screen section: invitation cover with custom monogram,
- * preloaded background video backdrop, separate background music track,
- * and 1s transition scroll triggers.
+ * Opening screen: the invitation as a closed royal book. Tapping it swings
+ * the cover open (3D page turn) over a burst of marigold petals and gold
+ * sparkles, then hands off to the golden transition → carousel.
+ *
+ * This screen is common to every invite variant — permutation links all
+ * open the same book and land on their own first slide.
  */
-export function EntryScreen({
-  showCover,
-  setShowCover,
-  audioElement,
-  onTransitionTrigger,
-}: EntryScreenProps) {
+export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
   const { couple, tagline, hashtag } = weddingConfig
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const [showSkip, setShowSkip] = useState(false)
+  const [opening, setOpening] = useState(false)
+  const initials = `${couple.bride.charAt(0)}&${couple.groom.charAt(0)}`
 
-  // 1. Play video when cover is dismissed
-  useEffect(() => {
-    if (!showCover && videoRef.current) {
-      videoRef.current.currentTime = 0
-      videoRef.current.play().catch((err) => {
-        console.error('Video autoplay failed or blocked:', err)
-        // Skip directly to the main content if the video fails to play
-        onTransitionTrigger()
-      })
-    }
-  }, [showCover, onTransitionTrigger])
-
-  // 2. Show Skip button after 2 seconds of video playback
-  useEffect(() => {
-    if (!showCover) {
-      const timer = setTimeout(() => {
-        setShowSkip(true)
-      }, 2000)
-      return () => clearTimeout(timer)
-    } else {
-      setShowSkip(false)
-    }
-  }, [showCover])
-
-  const handleOpenInvitation = () => {
-    // Attempt to play background music to satisfy user gesture policy
-    if (audioElement) {
-      audioElement.play().catch((err) => {
-        console.warn('Audio autoplay blocked or failed:', err)
-      })
-    }
-    // Fade out cover, displaying and playing the video
-    setShowCover(false)
+  const handleOpen = () => {
+    if (opening) return
+    onOpen() // user gesture → music starts here
+    setOpening(true)
+    // cover swing (~1.9s) + a beat to take in the inner page
+    setTimeout(onTransitionTrigger, 2700)
   }
 
   return (
     <section
       id="entry"
-      className="invite-section flex items-center justify-center bg-black text-royal-ivory"
+      className="invite-section flex items-center justify-center text-royal-ivory"
+      style={{ background: 'radial-gradient(ellipse at 50% 32%, #4A121F 0%, #16030a 74%)' }}
     >
-      {/* Background preloaded video */}
-      <div className="absolute inset-0 h-full w-full bg-black">
-        <video
-          ref={videoRef}
-          src={weddingConfig.entryVideo}
-          preload="auto"
-          muted
-          playsInline
-          className="h-full w-full object-cover"
-          onEnded={onTransitionTrigger}
-          onError={(e) => {
-            console.error('Video load failed:', e)
-            onTransitionTrigger()
-          }}
-        />
-        
-        {/* Soft overlay on video for cinematic style and contrast */}
-        <div className="absolute inset-0 bg-black/35 pointer-events-none" />
+      <GodRays />
+      <PalaceSilhouette windows="#E8CF7A" />
+      <GoldDust />
+      <div className="vignette" />
 
-        {/* Skip button for impatient guests */}
-        <AnimatePresence>
-          {showSkip && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={onTransitionTrigger}
-              className="absolute bottom-10 right-6 z-30 inline-flex items-center gap-1.5 rounded-full border border-royal-gold/45 bg-black/45 px-5 py-2 text-xs uppercase tracking-[0.2em] text-royal-gold-light backdrop-blur-md transition-all duration-300 hover:bg-royal-gold hover:text-royal-maroon-deep cursor-pointer active:scale-95"
-            >
-              Skip
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </div>
+      {opening && <OpeningBurst />}
 
-      {/* Elegant Invitation Cover */}
-      <AnimatePresence>
-        {showCover && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: 'easeInOut' }}
-            className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-royal-maroon-deep text-royal-ivory px-6 text-center"
+      {/* The invitation book */}
+      <motion.button
+        type="button"
+        onClick={handleOpen}
+        aria-label="Open the wedding invitation"
+        className="relative z-10 block cursor-pointer"
+        style={{ perspective: 2000 }}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: 'easeOut' }}
+      >
+        <motion.div
+          className="relative h-105 w-72 sm:h-120 sm:w-80"
+          animate={opening ? { y: 0 } : { y: [0, -8, 0] }}
+          transition={
+            opening ? { duration: 0.3 } : { duration: 4.5, repeat: Infinity, ease: 'easeInOut' }
+          }
+        >
+          {/* -------- inner page (revealed when the cover opens) -------- */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center rounded-r-xl border border-[#D8C49A] px-6 text-center"
+            style={{
+              background: 'linear-gradient(160deg, #FBF3E4, #F0E2C4)',
+              boxShadow: 'inset 0 0 40px #0002',
+            }}
           >
-            <BackgroundPattern pattern="mandala" color="#e8cf7a" opacity={0.08} />
+            <div className="pointer-events-none absolute inset-2 rounded-r-lg border border-[#C9A227]/50" />
+            <p className="text-[9px] uppercase tracking-[0.35em] text-[#8A6A3B]">
+              Together with their families
+            </p>
+            <p className="mt-3 font-heading text-4xl text-[#6B1F2F] sm:text-5xl">
+              {couple.bride}
+              <span className="mx-2 italic text-[#C9A227]">&amp;</span>
+              {couple.groom}
+            </p>
+            <div className="mx-auto my-4 flex w-32 items-center gap-2">
+              <span className="h-px flex-1 bg-[#C9A227]/60" />
+              <span className="h-1.5 w-1.5 rotate-45 bg-[#C9A227]" />
+              <span className="h-px flex-1 bg-[#C9A227]/60" />
+            </div>
+            <p className="max-w-55 text-xs font-light italic leading-relaxed text-[#6B4A2F]">
+              {tagline}
+            </p>
+            <p className="mt-4 text-[10px] tracking-[0.3em] text-[#C9A227]">{hashtag}</p>
+          </div>
 
-            {/* Custom Monogram */}
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.8 }}
-              className="mb-8"
+          {/* -------- front cover (swings open on tap) -------- */}
+          <motion.div
+            className="absolute inset-0"
+            style={{ transformOrigin: 'left center', transformStyle: 'preserve-3d' }}
+            animate={{ rotateY: opening ? -152 : 0 }}
+            transition={{ duration: 1.9, delay: opening ? 0.15 : 0, ease: [0.65, 0, 0.35, 1] }}
+          >
+            {/* cover front */}
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-between rounded-r-xl border py-8"
+              style={{
+                backfaceVisibility: 'hidden',
+                borderColor: '#C9A22799',
+                background: 'linear-gradient(150deg, #5C1626 0%, #3A0D18 55%, #24070e 100%)',
+                boxShadow: '0 30px 80px -25px #000d, 0 0 45px -18px #C9A22766',
+              }}
             >
-              <svg
-                className="h-28 w-28 mx-auto text-royal-gold"
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Dotted border */}
-                <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="1.2" strokeDasharray="4 4" strokeOpacity="0.5" />
-                {/* Inner double line border */}
-                <circle cx="50" cy="50" r="41" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.8" />
-                
-                {/* Monogram Flourishes */}
-                <path d="M50 3 L52.5 8 L50 13 L47.5 8 Z" fill="currentColor" />
-                <path d="M50 97 L52.5 92 L50 87 L47.5 92 Z" fill="currentColor" />
-                <path d="M3 50 L8 52.5 L13 50 L8 47.5 Z" fill="currentColor" />
-                <path d="M97 50 L92 52.5 L87 50 L92 47.5 Z" fill="currentColor" />
-                
-                {/* Initials Text */}
-                <text
-                  x="50"
-                  y="59"
-                  textAnchor="middle"
-                  fill="#e8cf7a"
-                  fontSize="28"
-                  fontFamily="Cormorant Garamond, Georgia, serif"
-                  letterSpacing="1"
-                  fontWeight="300"
+              <div className="pointer-events-none absolute inset-2.5 rounded-r-lg border border-royal-gold/50" />
+              <div className="pointer-events-none absolute inset-4 rounded-r-md border border-royal-gold/25" />
+              {/* spine highlight */}
+              <span className="pointer-events-none absolute inset-y-0 left-0 w-2 rounded-l-sm bg-gradient-to-r from-black/50 to-transparent" />
+
+              <p className="text-[9px] uppercase tracking-[0.4em] text-royal-gold-light/80">
+                Wedding Invitation
+              </p>
+
+              {/* mandala monogram */}
+              <div className="relative flex items-center justify-center">
+                <motion.svg
+                  viewBox="0 0 120 120"
+                  className="h-36 w-36 text-royal-gold sm:h-40 sm:w-40"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
                 >
-                  {`${couple.bride.charAt(0)}&${couple.groom.charAt(0)}`}
-                </text>
-              </svg>
-            </motion.div>
+                  <g fill="none" stroke="currentColor">
+                    <circle cx="60" cy="60" r="54" strokeWidth="0.8" strokeDasharray="3 5" />
+                    <circle cx="60" cy="60" r="45" strokeWidth="1" />
+                    {Array.from({ length: 16 }).map((_, i) => {
+                      const a = (i * Math.PI) / 8
+                      return (
+                        <path
+                          key={i}
+                          d={`M${60 + 45 * Math.cos(a)} ${60 + 45 * Math.sin(a)} L${60 + 52 * Math.cos(a)} ${60 + 52 * Math.sin(a)}`}
+                          strokeWidth="1"
+                          opacity="0.8"
+                        />
+                      )
+                    })}
+                  </g>
+                </motion.svg>
+                <span className="absolute font-heading text-3xl italic text-royal-gold-light sm:text-4xl">
+                  {initials}
+                </span>
+              </div>
 
-            {/* Bride & Groom names and tagline */}
-            <motion.div
-              initial={{ y: 16, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="max-w-xl"
-            >
-              <p className="mb-4 text-xs uppercase tracking-[0.35em] text-royal-gold-light">
-                Together with their families
-              </p>
-              <h1 className="text-5xl leading-tight sm:text-6.5xl font-heading text-royal-ivory">
-                {couple.bride}
-                <span className="mx-3 font-heading italic text-royal-gold sm:mx-4.5">&amp;</span>
-                {couple.groom}
-              </h1>
-              <div className="mx-auto my-6 h-px w-20 bg-royal-gold/40" />
-              <p className="mx-auto max-w-md text-sm font-light text-royal-ivory/80 leading-relaxed italic">
-                {tagline}
-              </p>
-              <p className="mt-6 text-xs uppercase tracking-[0.25em] text-royal-gold/80">{hashtag}</p>
-            </motion.div>
+              <div className="px-6 text-center">
+                <p className="font-heading text-2xl text-royal-ivory sm:text-3xl">
+                  {couple.bride} <span className="italic text-royal-gold">&amp;</span>{' '}
+                  {couple.groom}
+                </p>
+                <motion.p
+                  className="mt-4 text-[10px] uppercase tracking-[0.35em] text-royal-gold-light"
+                  animate={{ opacity: [0.45, 1, 0.45] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  ✦ Tap to open ✦
+                </motion.p>
+              </div>
+            </div>
 
-            {/* Tap Gesture to Unlock Autoplay */}
-            <motion.div
-              initial={{ y: 16, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.45, duration: 0.8 }}
-              className="mt-10"
+            {/* inside of the cover (visible mid-swing) */}
+            <div
+              className="absolute inset-0 rounded-l-xl border border-[#D8C49A]"
+              style={{
+                backfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)',
+                background: 'linear-gradient(200deg, #F3E7CE, #E4D2AC)',
+              }}
             >
-              <button
-                onClick={handleOpenInvitation}
-                className="relative inline-flex items-center justify-center px-9 py-4 border border-royal-gold bg-transparent text-royal-gold font-body text-xs uppercase tracking-[0.25em] cursor-pointer overflow-hidden transition-all duration-300 hover:text-royal-maroon-deep hover:bg-royal-gold hover:scale-105 active:scale-95 group shadow-md"
-              >
-                <span className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-royal-gold-light group-hover:border-royal-maroon-deep" />
-                <span className="absolute top-0 right-0 w-1.5 h-1.5 border-t border-r border-royal-gold-light group-hover:border-royal-maroon-deep" />
-                <span className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b border-l border-royal-gold-light group-hover:border-royal-maroon-deep" />
-                <span className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-royal-gold-light group-hover:border-royal-maroon-deep" />
-                Open Invitation
-              </button>
-            </motion.div>
+              <div className="pointer-events-none absolute inset-2 rounded-l-lg border border-[#C9A227]/40" />
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      </motion.button>
     </section>
   )
 }
 
+/* ---------------------------------------------------------------------------
+ * Entry video (disabled for now — the invitation opens as a book instead).
+ * To bring the video back: restore the props/state below and render this
+ * block in place of the book, playing weddingConfig.entryVideo.
+ *
+ * const videoRef = useRef<HTMLVideoElement | null>(null)
+ * const [showSkip, setShowSkip] = useState(false)
+ *
+ * <div className="absolute inset-0 h-full w-full bg-black">
+ *   <video
+ *     ref={videoRef}
+ *     src={weddingConfig.entryVideo}
+ *     preload="auto"
+ *     muted
+ *     playsInline
+ *     className="h-full w-full object-cover"
+ *     onEnded={onTransitionTrigger}
+ *     onError={() => onTransitionTrigger()}
+ *   />
+ *   <div className="absolute inset-0 bg-black/35 pointer-events-none" />
+ *   {showSkip && (
+ *     <button
+ *       onClick={onTransitionTrigger}
+ *       className="absolute bottom-10 right-6 z-30 rounded-full border border-royal-gold/45
+ *                  bg-black/45 px-5 py-2 text-xs uppercase tracking-[0.2em]
+ *                  text-royal-gold-light backdrop-blur-md"
+ *     >
+ *       Skip
+ *     </button>
+ *   )}
+ * </div>
+ * ------------------------------------------------------------------------- */

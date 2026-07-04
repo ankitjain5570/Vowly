@@ -105,6 +105,29 @@ export interface SlideTheme {
   bgTo: string
 }
 
+/** Optional slides that can be toggled per invite link */
+export type ExtraSlideId = 'story' | 'photobook' | 'info' | 'wishes'
+
+/**
+ * A shareable invitation variant. Guests opening
+ * `https://<site>/?invite=<slug>` see only the listed functions (plus the
+ * chosen extra slides and RSVP). Ad-hoc combinations also work without a
+ * preset: `?events=haldi,wedding&extras=story,info`.
+ *
+ * This is intentionally a plain lookup table so a future admin backend
+ * (e.g. Supabase) can replace it: resolveInvite() in src/invite.ts is the
+ * single place that turns a URL into an invite definition.
+ */
+export interface InvitePreset {
+  /** URL slug, e.g. "cocktail" → /?invite=cocktail */
+  slug: string
+  label: string
+  /** Function ids to include, in display order */
+  functions: string[]
+  /** Extra slides to include; omit to include all */
+  extras?: ExtraSlideId[]
+}
+
 export interface Photobook {
   eyebrow: string
   title: string
@@ -135,6 +158,8 @@ export interface WeddingConfig {
   photobook: Photobook
   /** Guests leave a message for the couple */
   guestbook: Guestbook
+  /** Named invitation variants for shareable links (see InvitePreset) */
+  invites: InvitePreset[]
   /** Main couple photo, used in the hero (wedding) section's arched frame */
   couplePhoto: string
   tagline: string
@@ -393,6 +418,57 @@ export const weddingConfig: WeddingConfig = {
         backgroundPattern: 'mandala',
         decoration: 'gold-particles',
       },
+    },
+    {
+      id: 'reception',
+      name: 'Reception',
+      date: 'Monday, 30 November 2026',
+      time: '7:00 PM onwards',
+      startISO: '2026-11-30T19:00:00+05:30',
+      endISO: '2026-11-30T23:30:00+05:30',
+      venueName: 'The Crystal Ballroom, Hyatt Regency',
+      venueAddress: 'Industrial & Business Park, Phase 1, Chandigarh 160002',
+      mapsUrl: 'https://maps.google.com/?q=Hyatt+Regency+Chandigarh',
+      dressCode: 'Formal Evening — Jewel Tones',
+      description:
+        'One last evening of dinner, toasts and photographs, as we greet you as a married couple for the very first time.',
+      avatar: '/media/avatars/reception.jpg',
+      theme: {
+        primary: '#D9A7E0',
+        accent: '#E8CF7A',
+        bgFrom: '#1A0620',
+        bgTo: '#4A1B5C',
+        backgroundPattern: 'floral',
+        decoration: 'gold-particles',
+      },
+    },
+  ],
+
+  /**
+   * Shareable invite variants. Examples:
+   *   /?invite=shaadi     → engagement + wedding + reception
+   *   /?invite=cocktail   → cocktail night only
+   *   /?events=haldi,mehendi&extras=story,info → ad-hoc combination
+   * No param (or unknown slug) shows everything.
+   */
+  invites: [
+    {
+      slug: 'shaadi',
+      label: 'Engagement & Wedding',
+      functions: ['engagement', 'wedding', 'reception'],
+      extras: ['story', 'info'],
+    },
+    {
+      slug: 'cocktail',
+      label: 'Cocktail Night',
+      functions: ['cocktail'],
+      extras: ['info'],
+    },
+    {
+      slug: 'reception',
+      label: 'Reception',
+      functions: ['reception'],
+      extras: ['info', 'wishes'],
     },
   ],
 

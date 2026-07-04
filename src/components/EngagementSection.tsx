@@ -140,32 +140,12 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
             </span>
           </motion.div>
 
-          {/* Avatar + overlapping polaroid photos */}
+          {/* Overlapping polaroid photos */}
           {fn.photos && fn.photos.length > 0 && (
             <motion.div
               variants={fadeUp}
               className="mt-7 flex items-center justify-center lg:justify-start"
             >
-              {fn.avatar && (
-                <motion.div
-                  initial={{ rotate: -4 }}
-                  whileHover={{ rotate: 0, y: -12, scale: 1.06, zIndex: 20 }}
-                  transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                  className="relative z-10 -mx-3 w-28 cursor-pointer overflow-hidden rounded-t-full border-2 p-1 sm:-mx-4 sm:w-36"
-                  style={{
-                    borderColor: theme.accent,
-                    backgroundColor: '#00000040',
-                    boxShadow: '0 18px 40px -12px #000a',
-                  }}
-                >
-                  <img
-                    src={fn.avatar}
-                    alt={`${weddingConfig.couple.bride} and ${weddingConfig.couple.groom} — ${fn.name}`}
-                    loading="lazy"
-                    className="aspect-3/4 w-full rounded-t-full object-cover object-top"
-                  />
-                </motion.div>
-              )}
               {fn.photos.slice(0, 3).map((src, i) => (
                 <motion.figure
                   key={src}
@@ -193,8 +173,34 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
           )}
         </div>
 
-        {/* ---------------- Right: ring exchange scene ---------------- */}
+        {/* ---------------- Right: avatar + ring exchange scene ---------------- */}
         <motion.div variants={fadeUp} className="relative">
+          {fn.avatar && (
+            <div className="mb-4 flex justify-center">
+              <div className="relative">
+                <span
+                  className="absolute -top-3 left-1/2 z-20 h-3 w-3 -translate-x-1/2 rotate-45"
+                  style={{ backgroundColor: theme.accent }}
+                />
+                <div
+                  className="relative z-10 w-36 overflow-hidden rounded-t-full border-4 p-1.5 sm:w-44"
+                  style={{ borderColor: theme.accent, backgroundColor: '#00000040' }}
+                >
+                  <div
+                    className="overflow-hidden rounded-t-full border"
+                    style={{ borderColor: `${theme.accent}70` }}
+                  >
+                    <img
+                      src={fn.avatar}
+                      alt={`${weddingConfig.couple.bride} and ${weddingConfig.couple.groom} — ${fn.name}`}
+                      loading="lazy"
+                      className="aspect-3/4 w-full object-cover object-top"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           <motion.div style={{ rotateY: sceneRotateY, rotateX: sceneRotateX }}>
             <div className="mx-auto w-full max-w-xl lg:max-w-none">
               <RingExchange key={replayKey} play initials={initials} primary={theme.primary} />

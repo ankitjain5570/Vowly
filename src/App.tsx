@@ -13,13 +13,6 @@ function App() {
     return false
   })
 
-  const [showCover, setShowCover] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('wedding_invite_visited') !== 'true'
-    }
-    return true
-  })
-
   // `musicOn` is the single source of truth for whether music SHOULD play.
   // The mute button flips it; an effect syncs the actual <audio> to match, so
   // nothing (including pending autoplay-resume listeners) can restart audio
@@ -78,6 +71,13 @@ function App() {
 
   const toggleMusic = useCallback(() => setMusicOn((on) => !on), [])
 
+  // Called from the book-opening tap — a real user gesture, so play()
+  // succeeds immediately instead of waiting for the autoplay fallback.
+  const startMusic = useCallback(() => {
+    setMusicOn(true)
+    audioRef.current?.play().catch(() => {})
+  }, [])
+
   // 3. Golden transition handler
   const triggerGoldenTransition = useCallback(() => {
     setTransitionState('fading-in')
@@ -105,7 +105,6 @@ function App() {
   const handleReplay = useCallback(() => {
     setMusicOn(false)
     setEntryCompleted(false)
-    setShowCover(true)
     // Scroll smoothly back to top where entry screen will show
     setTimeout(() => {
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -116,12 +115,7 @@ function App() {
     <>
       <main>
         {!entryCompleted ? (
-          <EntryScreen
-            showCover={showCover}
-            setShowCover={setShowCover}
-            audioElement={audioRef.current}
-            onTransitionTrigger={triggerGoldenTransition}
-          />
+          <EntryScreen onOpen={startMusic} onTransitionTrigger={triggerGoldenTransition} />
         ) : (
           <InviteCarousel onReplayEntry={handleReplay} />
         )}
