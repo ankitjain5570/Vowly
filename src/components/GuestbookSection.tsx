@@ -110,7 +110,7 @@ export function GuestbookSection() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={6}
-                placeholder="Dear Aarohi & Vihaan…"
+                placeholder={`Dear ${couple.bride} & ${couple.groom}…`}
                 className="w-full resize-none rounded-lg border bg-black/25 px-4 py-3 text-sm font-light leading-relaxed text-royal-ivory placeholder:text-royal-ivory/35 focus:outline-none"
                 style={{ borderColor: overLimit ? '#e05c5c' : '#ffffff26' }}
                 onFocus={(e) => {

@@ -42,6 +42,8 @@ export interface WeddingFunction {
   photos?: string[]
   /** The grandest section — larger type, countdown, couple photo */
   hero?: boolean
+  /** Illustrated couple avatar for this function (site-root-relative path) */
+  avatar?: string
   theme: FunctionTheme
 }
 
@@ -156,8 +158,8 @@ export interface WeddingConfig {
 
 export const weddingConfig: WeddingConfig = {
   couple: {
-    bride: 'Aarohi',
-    groom: 'Vihaan',
+    bride: 'Diya',
+    groom: 'Abhishek',
   },
   couplePhoto: '/media/photos/couple-main.jpeg',
   loveStory: {
@@ -165,21 +167,21 @@ export const weddingConfig: WeddingConfig = {
     title: 'Our Story',
     chapters: [
       {
-        label: '2019 · Jaipur',
+        label: '2019 · Chandigarh',
         title: 'The First Hello',
-        text: 'A friend’s sangeet, one borrowed dance partner, and a conversation that refused to end. Vihaan forgot the steps; Aarohi pretended not to notice.',
+        text: 'A friend’s sangeet, one borrowed dance partner, and a conversation that refused to end. Abhi forgot the steps; Diya pretended not to notice.',
         photo: '/media/photos/story-1.jpeg',
       },
       {
         label: '2021 · Two Cities',
         title: 'Long Distance, Longer Calls',
-        text: 'Between Mumbai deadlines and Jaipur monsoons, we wore out two phone batteries a day and learnt that home is a person, not a place.',
+        text: 'Between Delhi deadlines and Chandigarh winters, we wore out two phone batteries a day and learnt that home is a person, not a place.',
         photo: '/media/photos/story-2.jpeg',
       },
       {
-        label: '2023 · Udaipur',
+        label: '2023 · Kasauli',
         title: 'The Question',
-        text: 'On a lake-side terrace at sunset, Vihaan went down on one knee. She said yes before he finished the sentence.',
+        text: 'On a hilltop terrace at sunset, Abhi went down on one knee. Diya said yes before he finished the sentence.',
         photo: '/media/photos/story-3.jpeg',
       },
       {
@@ -200,19 +202,19 @@ export const weddingConfig: WeddingConfig = {
     faqs: [
       {
         q: 'How do I reach the wedding venue?',
-        a: 'Rajmahal Palace Lawns is on Sardar Patel Marg, C-Scheme. From Jaipur Airport it is a 30-minute drive (12 km) via Tonk Road; from Jaipur Junction railway station about 15 minutes (6 km). Uber/Ola work reliably, and prepaid taxis are available at both.',
+        a: 'The Grand Palace Lawns is on Madhya Marg, New Chandigarh. From Shaheed Bhagat Singh International Airport it is a 40-minute drive (22 km); from Chandigarh Junction railway station about 25 minutes (12 km). Uber/Ola work reliably, and prepaid taxis are available at both.',
       },
       {
         q: 'Will there be shuttles between functions?',
-        a: 'Yes — a shuttle leaves from the Hotel Devi Palace lobby 90 and 45 minutes before every function, and returns until 1 AM on the wedding night. No booking needed, just hop in.',
+        a: 'Yes — a shuttle leaves from the Hotel Mountview lobby 90 and 45 minutes before every function, and returns until 1 AM on the wedding and cocktail nights. No booking needed, just hop in.',
       },
       {
         q: 'Is parking available at the venues?',
-        a: 'Valet parking is available at the main gate for the Engagement and Wedding. For the Haldi at the family home, street parking is limited — we recommend the shuttle or a cab.',
+        a: 'Valet parking is available at the Engagement, Cocktail Night and Wedding venues. For the Haldi at the family home in Sector 9, street parking is limited — we recommend the shuttle or a cab.',
       },
       {
         q: 'What will the weather be like?',
-        a: 'Jaipur in late November is lovely — sunny days around 24°C and cool evenings near 12°C. Carry a shawl or light jacket for the outdoor evening functions.',
+        a: 'Chandigarh in late November is crisp — pleasant days around 22°C and chilly evenings near 8°C. Do carry a shawl or jacket for the outdoor evening functions.',
       },
       {
         q: 'What about gifts?',
@@ -221,19 +223,19 @@ export const weddingConfig: WeddingConfig = {
     ],
     hotels: [
       {
-        name: 'Hotel Devi Palace',
-        note: 'Our guest block — mention "AaroVihaan Wedding" for reserved rates. 2 km from the venue; all shuttles start here.',
-        mapsUrl: 'https://maps.google.com/?q=Hotel+Devi+Palace+Jaipur',
+        name: 'Hotel Mountview',
+        note: 'Our guest block in Sector 10 — mention "AbhiDiya Wedding" for reserved rates. All shuttles start here.',
+        mapsUrl: 'https://maps.google.com/?q=Hotel+Mountview+Sector+10+Chandigarh',
       },
       {
-        name: 'The Amber Courtyard',
-        note: 'Boutique stay 10 minutes away, great for families — limited rooms, book by 1 November.',
-        mapsUrl: 'https://maps.google.com/?q=Amber+Courtyard+Jaipur',
+        name: 'Lemon Tree, Elante',
+        note: 'Comfortable stay next to Elante Mall, 15 minutes from the venues — limited rooms, book by 1 November.',
+        mapsUrl: 'https://maps.google.com/?q=Lemon+Tree+Elante+Chandigarh',
       },
     ],
     contacts: [
       { name: 'Rohan Sharma', role: 'Bride’s brother — travel & stay', phone: '919876543210' },
-      { name: 'Karan Mehta', role: 'Groom’s cousin — venue & logistics', phone: '919812345678' },
+      { name: 'Karan Soni', role: 'Groom’s cousin — venue & logistics', phone: '919812345678' },
     ],
     theme: {
       accent: '#E8CF7A',
@@ -264,26 +266,27 @@ export const weddingConfig: WeddingConfig = {
     },
   },
   tagline: 'Two souls, one journey — join us as we begin ours.',
-  hashtag: '#AaroToldVihaanYes',
+  hashtag: '#AbhiKiDiya',
   entryVideo: '/media/entry-video.mp4',
-  music: '/media/wedding-music.mp3',
+  music: '/media/wedding-music.m4a',
 
   functions: [
     {
       id: 'engagement',
       name: 'Engagement',
-      date: 'Friday, 20 November 2026',
+      date: 'Thursday, 26 November 2026',
       time: '7:00 PM onwards',
-      startISO: '2026-11-20T19:00:00+05:30',
-      endISO: '2026-11-20T23:00:00+05:30',
-      venueName: 'The Regal Pavilion',
-      venueAddress: '12 Palace Road, Jaipur, Rajasthan 302001',
-      mapsUrl: 'https://maps.google.com/?q=The+Regal+Pavilion+Jaipur',
+      startISO: '2026-11-26T19:00:00+05:30',
+      endISO: '2026-11-26T23:00:00+05:30',
+      venueName: 'Sukhvilas Resort Pavilion',
+      venueAddress: 'Siswan Forest Range, New Chandigarh, Punjab 140901',
+      mapsUrl: 'https://maps.google.com/?q=Sukhvilas+Resort+New+Chandigarh',
       dressCode: 'Cocktail Elegance — Blush & Rose Gold',
       description:
         'An evening of rings, promises and celebration as our families come together for the very first chapter of our story.',
       story:
-        'It began with a chance meeting at a friend’s sangeet, grew over long chai-fuelled conversations, and turned into forever the day Vihaan went down on one knee. Now we make it official — with two rings, two families, and one very big party.',
+        'It began with a chance meeting at a friend’s sangeet, grew over long chai-fuelled conversations, and turned into forever the day Abhi went down on one knee. Now we make it official — with two rings, two families, and one very big party.',
+      avatar: '/media/avatars/engagement.jpg',
       photos: [
         '/media/photos/engagement-1.jpeg',
         '/media/photos/engagement-2.jpeg',
@@ -301,16 +304,17 @@ export const weddingConfig: WeddingConfig = {
     {
       id: 'haldi',
       name: 'Haldi',
-      date: 'Saturday, 21 November 2026',
+      date: 'Friday, 27 November 2026',
       time: '10:00 AM onwards',
-      startISO: '2026-11-21T10:00:00+05:30',
-      endISO: '2026-11-21T13:00:00+05:30',
+      startISO: '2026-11-27T10:00:00+05:30',
+      endISO: '2026-11-27T13:00:00+05:30',
       venueName: 'Sharma Family Residence',
-      venueAddress: '45 Marigold Lane, Civil Lines, Jaipur, Rajasthan 302006',
-      mapsUrl: 'https://maps.google.com/?q=Civil+Lines+Jaipur',
+      venueAddress: 'House 23, Sector 9-C, Chandigarh 160009',
+      mapsUrl: 'https://maps.google.com/?q=Sector+9+Chandigarh',
       dressCode: 'Shades of Yellow & Marigold',
       description:
         'A morning drenched in turmeric, laughter and blessings — come ready to get your hands (and clothes) gloriously yellow.',
+      avatar: '/media/avatars/haldi.jpg',
       theme: {
         primary: '#F5A623',
         accent: '#FFD95E',
@@ -323,16 +327,17 @@ export const weddingConfig: WeddingConfig = {
     {
       id: 'mehendi',
       name: 'Mehendi',
-      date: 'Saturday, 21 November 2026',
+      date: 'Friday, 27 November 2026',
       time: '4:00 PM onwards',
-      startISO: '2026-11-21T16:00:00+05:30',
-      endISO: '2026-11-21T21:00:00+05:30',
-      venueName: 'Bagh-e-Bahar Gardens',
-      venueAddress: '8 Amer Road, Jaipur, Rajasthan 302002',
-      mapsUrl: 'https://maps.google.com/?q=Amer+Road+Jaipur',
+      startISO: '2026-11-27T16:00:00+05:30',
+      endISO: '2026-11-27T21:00:00+05:30',
+      venueName: 'The Rose Garden Pavilion',
+      venueAddress: 'Zakir Hussain Rose Garden, Sector 16, Chandigarh 160015',
+      mapsUrl: 'https://maps.google.com/?q=Rose+Garden+Sector+16+Chandigarh',
       dressCode: 'Greens & Festive Florals',
       description:
         'An evening of henna, folk songs and swings under the stars, as intricate patterns weave our two families into one.',
+      avatar: '/media/avatars/mehendi.jpg',
       theme: {
         primary: '#9BD4A9',
         accent: '#DCC26A',
@@ -343,19 +348,43 @@ export const weddingConfig: WeddingConfig = {
       },
     },
     {
+      id: 'cocktail',
+      name: 'Cocktail Night',
+      date: 'Saturday, 28 November 2026',
+      time: '8:00 PM till late',
+      startISO: '2026-11-28T20:00:00+05:30',
+      endISO: '2026-11-29T00:30:00+05:30',
+      venueName: 'The Skyline Terrace, JW Marriott',
+      venueAddress: 'Plot 6, Sector 35-B, Chandigarh 160035',
+      mapsUrl: 'https://maps.google.com/?q=JW+Marriott+Chandigarh',
+      dressCode: 'Cocktail Glam — Midnight Blue & Sequins',
+      description:
+        'Clink glasses under the stars — signature cocktails, sangeet performances, and a dance floor that stays open till the last song.',
+      avatar: '/media/avatars/cocktail.jpg',
+      theme: {
+        primary: '#8FA8FF',
+        accent: '#E8CF7A',
+        bgFrom: '#070B1E',
+        bgTo: '#232B5C',
+        backgroundPattern: 'jaali',
+        decoration: 'gold-particles',
+      },
+    },
+    {
       id: 'wedding',
       name: 'Wedding',
-      date: 'Sunday, 22 November 2026',
+      date: 'Sunday, 29 November 2026',
       time: '8:00 PM — Baraat at 7:00 PM',
-      startISO: '2026-11-22T20:00:00+05:30',
-      endISO: '2026-11-23T00:30:00+05:30',
-      venueName: 'Rajmahal Palace Lawns',
-      venueAddress: 'Sardar Patel Marg, C-Scheme, Jaipur, Rajasthan 302001',
-      mapsUrl: 'https://maps.google.com/?q=Rajmahal+Palace+Jaipur',
+      startISO: '2026-11-29T20:00:00+05:30',
+      endISO: '2026-11-30T00:30:00+05:30',
+      venueName: 'The Grand Palace Lawns',
+      venueAddress: 'Madhya Marg, New Chandigarh, Punjab 140901',
+      mapsUrl: 'https://maps.google.com/?q=Madhya+Marg+Chandigarh',
       dressCode: 'Royal Indian — Maroon, Gold & Ivory',
       description:
         'Under a canopy of flowers and firelight, we take our seven vows. Join us for the pheras, followed by dinner and celebrations.',
       hero: true,
+      avatar: '/media/avatars/wedding.jpg',
       theme: {
         primary: '#E8CF7A',
         accent: '#F5E08A',
@@ -376,7 +405,7 @@ export const weddingConfig: WeddingConfig = {
 
   footer: {
     message: 'We can’t wait to celebrate with you.',
-    familyLine: 'With love, the Sharma & Mehta families',
+    familyLine: 'With love, the Sharma & Soni families',
   },
 }
 

@@ -149,7 +149,7 @@ export function EntryScreen({
                   letterSpacing="1"
                   fontWeight="300"
                 >
-                  A&amp;V
+                  {`${couple.bride.charAt(0)}&${couple.groom.charAt(0)}`}
                 </text>
               </svg>
             </motion.div>

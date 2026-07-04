@@ -4,6 +4,7 @@ import { weddingConfig, type WeddingFunction } from '../wedding.config'
 import { BackgroundPattern } from '../theme/patterns'
 import { RingExchange } from './RingExchange'
 import { useTilt } from '../hooks/useTilt'
+import { downloadICS } from '../utils/calendar'
 import { GodRays, GoldDust, LetterReveal, PalaceSilhouette } from './royal'
 
 const container: Variants = {
@@ -88,12 +89,83 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
             </motion.p>
           )}
 
-          {/* Overlapping polaroid photos */}
+          {/* Venue */}
+          <motion.div variants={fadeUp} className="mt-5 space-y-1 text-sm">
+            <p className="font-medium text-royal-ivory/95">{fn.venueName}</p>
+            <p className="font-light text-royal-ivory/70">{fn.venueAddress}</p>
+          </motion.div>
+
+          {/* Actions */}
+          <motion.div
+            variants={fadeUp}
+            className="mt-5 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
+          >
+            <a
+              href={fn.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-xs font-medium uppercase tracking-[0.2em] text-royal-maroon-deep shadow-lg transition-transform hover:scale-105 active:scale-95"
+              style={{
+                background: `linear-gradient(120deg, #F5E08A, ${theme.accent} 55%, #C9A227)`,
+                boxShadow: `0 8px 24px -8px ${theme.accent}aa`,
+              }}
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11Z" />
+                <circle cx="12" cy="10" r="2.5" />
+              </svg>
+              Get Directions
+            </a>
+            <button
+              type="button"
+              onClick={() => downloadICS(fn)}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border px-6 py-2.5 text-xs uppercase tracking-[0.2em] transition-colors hover:bg-white/10"
+              style={{ borderColor: `${theme.accent}90`, color: theme.accent }}
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <rect x="3" y="5" width="18" height="16" rx="2" />
+                <path strokeLinecap="round" d="M8 3v4M16 3v4M3 10h18M12 13v6m-3-3h6" />
+              </svg>
+              Add to Calendar
+            </button>
+          </motion.div>
+
+          {/* Dress code chip */}
+          <motion.div variants={fadeUp} className="mt-5">
+            <span
+              className="inline-block rounded-full border px-4 py-1.5 text-[10px] uppercase tracking-[0.2em] text-royal-ivory/85"
+              style={{ borderColor: `${theme.accent}60`, backgroundColor: '#ffffff0d' }}
+            >
+              Dress code · {fn.dressCode}
+            </span>
+          </motion.div>
+
+          {/* Avatar + overlapping polaroid photos */}
           {fn.photos && fn.photos.length > 0 && (
             <motion.div
               variants={fadeUp}
-              className="mt-8 flex items-center justify-center lg:justify-start"
+              className="mt-7 flex items-center justify-center lg:justify-start"
             >
+              {fn.avatar && (
+                <motion.div
+                  initial={{ rotate: -4 }}
+                  whileHover={{ rotate: 0, y: -12, scale: 1.06, zIndex: 20 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+                  className="relative z-10 -mx-3 w-28 cursor-pointer overflow-hidden rounded-t-full border-2 p-1 sm:-mx-4 sm:w-36"
+                  style={{
+                    borderColor: theme.accent,
+                    backgroundColor: '#00000040',
+                    boxShadow: '0 18px 40px -12px #000a',
+                  }}
+                >
+                  <img
+                    src={fn.avatar}
+                    alt={`${weddingConfig.couple.bride} and ${weddingConfig.couple.groom} — ${fn.name}`}
+                    loading="lazy"
+                    className="aspect-3/4 w-full rounded-t-full object-cover object-top"
+                  />
+                </motion.div>
+              )}
               {fn.photos.slice(0, 3).map((src, i) => (
                 <motion.figure
                   key={src}

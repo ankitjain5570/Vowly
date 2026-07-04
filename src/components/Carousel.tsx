@@ -10,7 +10,7 @@ import { GuestbookSection } from './GuestbookSection'
 import { RSVPSection } from './RSVPSection'
 import { NavDots } from './NavDots'
 
-const SLIDE_MS = 15_000
+const SLIDE_MS = 10_000
 
 /** 3D coverflow-style slide transition, direction-aware. */
 const variants: Variants = {

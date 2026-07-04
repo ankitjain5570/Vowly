@@ -119,8 +119,8 @@ export function FunctionSection({ fn }: { fn: WeddingFunction }) {
           >
             <motion.div style={{ rotateX: cardRotateX, rotateY: cardRotateY }}>
               <ArchPanel accent={theme.accent}>
-                {/* Hero: couple photo in jharokha arch */}
-                {hero ? (
+                {/* Couple avatar (or hero couple photo) in a jharokha arch */}
+                {(fn.avatar || hero) && (
                   <motion.div
                     className="relative mx-auto mb-6 w-fit"
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -132,7 +132,9 @@ export function FunctionSection({ fn }: { fn: WeddingFunction }) {
                       style={{ backgroundColor: theme.accent }}
                     />
                     <div
-                      className="relative z-10 w-44 overflow-hidden rounded-t-full border-4 p-1.5 sm:w-52"
+                      className={`relative z-10 overflow-hidden rounded-t-full border-4 p-1.5 ${
+                        hero ? 'w-44 sm:w-52' : 'w-40 sm:w-48'
+                      }`}
                       style={{ borderColor: theme.accent, backgroundColor: '#00000040' }}
                     >
                       <div
@@ -140,10 +142,10 @@ export function FunctionSection({ fn }: { fn: WeddingFunction }) {
                         style={{ borderColor: `${theme.accent}70` }}
                       >
                         <img
-                          src={weddingConfig.couplePhoto}
-                          alt={`${weddingConfig.couple.bride} and ${weddingConfig.couple.groom}`}
+                          src={fn.avatar ?? weddingConfig.couplePhoto}
+                          alt={`${weddingConfig.couple.bride} and ${weddingConfig.couple.groom} — ${fn.name}`}
                           loading="lazy"
-                          className="aspect-3/4 w-full object-cover"
+                          className="aspect-3/4 w-full object-cover object-top"
                         />
                       </div>
                     </div>
@@ -156,32 +158,6 @@ export function FunctionSection({ fn }: { fn: WeddingFunction }) {
                       style={{ backgroundColor: `${theme.accent}99` }}
                     />
                   </motion.div>
-                ) : (
-                  /* Non-hero: ornamental crest fills the arch crown */
-                  <motion.svg
-                    viewBox="0 0 80 80"
-                    className="mx-auto mb-5 h-16 w-16"
-                    initial={{ opacity: 0, rotate: -30 }}
-                    animate={{ opacity: 1, rotate: 0 }}
-                    transition={{ duration: 0.9, delay: 1 }}
-                    aria-hidden="true"
-                  >
-                    <g fill="none" stroke={theme.accent} strokeWidth="1.3">
-                      <circle cx="40" cy="40" r="26" strokeDasharray="3 4" opacity="0.7" />
-                      <circle cx="40" cy="40" r="18" />
-                      {Array.from({ length: 8 }).map((_, i) => {
-                        const a = (i * Math.PI) / 4
-                        return (
-                          <path
-                            key={i}
-                            d={`M${40 + 18 * Math.cos(a)} ${40 + 18 * Math.sin(a)} L${40 + 30 * Math.cos(a)} ${40 + 30 * Math.sin(a)}`}
-                            opacity="0.8"
-                          />
-                        )
-                      })}
-                      <circle cx="40" cy="40" r="5" fill={theme.accent} stroke="none" opacity="0.9" />
-                    </g>
-                  </motion.svg>
                 )}
 
                 {/* Date & time */}

@@ -12,9 +12,10 @@ dist
 dist-ssr
 *.local
 
-# Raw source assets (already copied into public/media and src/photobook)
+# Raw source assets (already copied into public/media; Photobook/ IS tracked)
 Audio File/
 Couple Photos/
+Couple Avatars/
 Sample Videos/
 
 # Editor directories and files
