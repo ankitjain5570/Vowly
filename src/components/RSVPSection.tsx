@@ -1,15 +1,32 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { weddingConfig } from '../wedding.config'
+import { weddingConfig, type WeddingFunction } from '../wedding.config'
 import { BackgroundPattern } from '../theme/patterns'
 import { DiyaRow, GoldDust, LetterReveal, PalaceSilhouette } from './royal'
+import { RSVPModal } from './RSVPModal'
 
 /**
  * Final slide: RSVP call-to-action plus the sign-off — couple names,
- * family line, hashtag and the replay-entry control. Same royal night
- * treatment as the function slides.
+ * family line, hashtag and the replay-entry control. The RSVP button opens
+ * a modal form (see RSVPModal); `functions` are the ones in this invite so
+ * the form only offers celebrations the guest is actually invited to.
  */
-export function RSVPSection({ onReplayEntry }: { onReplayEntry: () => void }) {
+export function RSVPSection({
+  onReplayEntry,
+  functions,
+  onFormOpenChange,
+}: {
+  onReplayEntry: () => void
+  functions: WeddingFunction[]
+  /** lets the carousel pause auto-advance while the form is open */
+  onFormOpenChange?: (open: boolean) => void
+}) {
   const { rsvp, hashtag, couple, footer } = weddingConfig
+  const [formOpen, setFormOpen] = useState(false)
+
+  useEffect(() => {
+    onFormOpenChange?.(formOpen)
+  }, [formOpen, onFormOpenChange])
 
   return (
     <section
@@ -44,35 +61,32 @@ export function RSVPSection({ onReplayEntry }: { onReplayEntry: () => void }) {
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.35, ease: 'easeOut' }}
-        className="relative z-10 mx-auto max-w-2xl px-6 py-14 text-center"
+        className="mobile-safe relative z-10 mx-auto max-w-2xl px-6 py-6 text-center sm:py-14"
       >
         <h2 className="text-4xl sm:text-5xl lg:text-6xl">
           <LetterReveal text={rsvp.title} delay={0.6} step={0.04} />
         </h2>
-        <p className="mx-auto mt-6 max-w-xl font-light leading-relaxed text-royal-ivory/85 lg:text-lg">
+        <p className="mx-auto mt-4 max-w-xl text-sm font-light leading-relaxed text-royal-ivory/85 sm:mt-6 sm:text-base lg:text-lg">
           {rsvp.message}
         </p>
-        <a
-          href={`https://wa.me/${rsvp.whatsappNumber}?text=${encodeURIComponent(
-            `We would love to attend! ${hashtag}`,
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-9 inline-block rounded-full px-8 py-3 text-sm font-medium uppercase tracking-[0.25em] text-royal-maroon-deep shadow-lg transition-transform hover:scale-105 active:scale-95"
+        <button
+          type="button"
+          onClick={() => setFormOpen(true)}
+          className="mt-6 inline-block cursor-pointer rounded-full px-8 py-3 text-sm font-medium uppercase tracking-[0.25em] text-royal-maroon-deep shadow-lg transition-transform hover:scale-105 active:scale-95 sm:mt-9"
           style={{
             background: 'linear-gradient(120deg, #F5E08A, #E8CF7A 55%, #C9A227)',
             boxShadow: '0 8px 28px -8px #c9a227aa',
           }}
         >
-          RSVP on WhatsApp
-        </a>
+          RSVP Now
+        </button>
 
-        <div className="mt-10">
+        <div className="mt-6 sm:mt-10">
           <DiyaRow count={3} />
         </div>
 
         {/* sign-off */}
-        <div className="mx-auto mt-8 flex max-w-xs items-center gap-3">
+        <div className="mx-auto mt-6 flex max-w-xs items-center gap-3 sm:mt-8">
           <span className="h-px flex-1 bg-royal-gold/50" />
           <span className="h-1.5 w-1.5 rotate-45 bg-royal-gold" />
           <span className="h-px flex-1 bg-royal-gold/50" />
@@ -90,6 +104,8 @@ export function RSVPSection({ onReplayEntry }: { onReplayEntry: () => void }) {
           Replay entry
         </button>
       </motion.div>
+
+      {formOpen && <RSVPModal functions={functions} onClose={() => setFormOpen(false)} />}
     </section>
   )
 }

@@ -14,7 +14,7 @@ export function StorySection() {
   return (
     <section
       id="story"
-      className="invite-section flex items-center justify-center text-royal-ivory"
+      className="invite-section allow-scroll flex items-start justify-center text-royal-ivory sm:items-center"
       style={{
         background: `radial-gradient(ellipse at 50% 26%, ${theme.bgTo} 0%, ${theme.bgFrom} 72%)`,
       }}
@@ -24,7 +24,7 @@ export function StorySection() {
       <GoldDust />
       <div className="vignette" />
 
-      <div className="relative z-10 mx-auto w-full max-w-5xl px-6 py-14 sm:px-8">
+      <div className="mobile-safe relative z-10 mx-auto w-full max-w-5xl px-6 py-6 sm:py-14 sm:px-8">
         {/* Header */}
         <div className="text-center">
           <motion.p
@@ -35,14 +35,14 @@ export function StorySection() {
           >
             {loveStory.eyebrow}
           </motion.p>
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl">
+          <h2 className="text-4xl sm:text-6xl lg:text-7xl">
             <LetterReveal text={loveStory.title} delay={0.55} />
           </h2>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 1 }}
-            className="mx-auto my-5 flex max-w-xs items-center gap-3"
+            className="mx-auto my-3 flex max-w-xs items-center gap-3 sm:my-5"
           >
             <span className="h-px flex-1 bg-royal-gold/60" />
             <span className="h-2 w-2 rotate-45 bg-royal-gold" />
@@ -51,7 +51,7 @@ export function StorySection() {
         </div>
 
         {/* Timeline */}
-        <div className="relative mt-6">
+        <div className="relative mt-4 sm:mt-6">
           {/* central line (left rail on mobile) */}
           <motion.span
             aria-hidden="true"
@@ -65,7 +65,7 @@ export function StorySection() {
             transition={{ duration: 1.8, delay: 0.9, ease: 'easeInOut' }}
           />
 
-          <div className="space-y-9 lg:space-y-12">
+          <div className="space-y-4 sm:space-y-9 lg:space-y-12">
             {chapters.map((ch, i) => {
               const right = i % 2 === 1
               return (
@@ -98,7 +98,7 @@ export function StorySection() {
                         alt={ch.title}
                         loading="lazy"
                         whileHover={{ scale: 1.06, rotate: right ? 2 : -2 }}
-                        className="mt-1 h-28 w-22 shrink-0 rounded-t-full border-2 object-cover sm:h-32 sm:w-25"
+                        className="mt-1 h-24 w-20 shrink-0 rounded-t-full border-2 object-cover sm:h-32 sm:w-25"
                         style={{ borderColor: `${theme.accent}90` }}
                       />
                     )}
@@ -109,10 +109,10 @@ export function StorySection() {
                       >
                         {ch.label}
                       </p>
-                      <h3 className="mt-1 font-heading text-2xl text-royal-gold-light sm:text-3xl">
+                      <h3 className="mt-0.5 font-heading text-xl text-royal-gold-light sm:mt-1 sm:text-3xl">
                         {ch.title}
                       </h3>
-                      <p className="mt-1.5 max-w-md text-sm font-light leading-relaxed text-royal-ivory/75">
+                      <p className="mt-1 max-w-md text-xs font-light leading-relaxed text-royal-ivory/75 sm:text-sm">
                         {ch.text}
                       </p>
                     </div>

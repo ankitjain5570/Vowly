@@ -54,7 +54,95 @@ export function FunctionSection({ fn }: { fn: WeddingFunction }) {
       <GoldDust />
       <div className="vignette" />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:px-10">
+      {/* ============ Phone: compact single-screen stack ============ */}
+      <div className="mobile-safe relative z-10 flex w-full max-w-sm flex-col items-center px-6 text-center sm:hidden">
+        <p className="mb-3 text-[10px] uppercase tracking-[0.4em] text-royal-ivory/70">
+          You are invited to the
+        </p>
+
+        {(fn.avatar || hero) && (
+          <div className="relative mb-4">
+            <span
+              className="absolute -top-2.5 left-1/2 z-20 h-2.5 w-2.5 -translate-x-1/2 rotate-45"
+              style={{ backgroundColor: theme.accent }}
+            />
+            <div
+              className="relative z-10 w-24 overflow-hidden rounded-t-full border-[3px] p-1"
+              style={{ borderColor: theme.accent, backgroundColor: '#00000040' }}
+            >
+              <img
+                src={fn.avatar ?? weddingConfig.couplePhoto}
+                alt={`${weddingConfig.couple.bride} and ${weddingConfig.couple.groom} — ${fn.name}`}
+                loading="lazy"
+                className="aspect-3/4 w-full rounded-t-full object-cover object-top"
+              />
+            </div>
+          </div>
+        )}
+
+        <h2 className="text-5xl leading-none">
+          <LetterReveal text={fn.name} delay={0.4} />
+        </h2>
+
+        <div className="my-3 flex w-40 items-center gap-2">
+          <span className="h-px flex-1" style={{ backgroundColor: `${theme.accent}88` }} />
+          <span className="h-1.5 w-1.5 rotate-45" style={{ backgroundColor: theme.accent }} />
+          <span className="h-px flex-1" style={{ backgroundColor: `${theme.accent}88` }} />
+        </div>
+
+        <p className="font-heading text-xl" style={{ color: theme.accent }}>
+          {fn.date}
+        </p>
+        <p className="text-xs font-light" style={{ color: theme.accent }}>
+          {fn.time}
+        </p>
+
+        <p className="mt-3 text-sm font-medium text-royal-ivory/95">{fn.venueName}</p>
+
+        {hero && (
+          <div className="mt-3">
+            <Countdown targetISO={fn.startISO} color={theme.accent} />
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center justify-center gap-2.5">
+          <a
+            href={fn.mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[10px] font-medium uppercase tracking-[0.15em] text-royal-maroon-deep shadow-lg active:scale-95"
+            style={{ background: `linear-gradient(120deg, #F5E08A, ${theme.accent} 55%, #C9A227)` }}
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11Z" />
+              <circle cx="12" cy="10" r="2.5" />
+            </svg>
+            Directions
+          </a>
+          <button
+            type="button"
+            onClick={() => downloadICS(fn)}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-4 py-2 text-[10px] uppercase tracking-[0.15em] active:scale-95"
+            style={{ borderColor: `${theme.accent}90`, color: theme.accent }}
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path strokeLinecap="round" d="M8 3v4M16 3v4M3 10h18M12 13v6m-3-3h6" />
+            </svg>
+            Calendar
+          </button>
+        </div>
+
+        <span
+          className="mt-3 inline-block rounded-full border px-3 py-1 text-[9px] uppercase tracking-[0.2em] text-royal-ivory/85"
+          style={{ borderColor: `${theme.accent}60`, backgroundColor: '#ffffff0d' }}
+        >
+          Dress code · {fn.dressCode}
+        </span>
+      </div>
+
+      {/* ============ Tablet / desktop: two-column editorial ============ */}
+      <div className="relative z-10 mx-auto hidden w-full max-w-6xl items-center gap-10 px-6 py-14 sm:grid lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:px-10">
         {/* ---------------- Left: editorial title block ---------------- */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}

@@ -30,12 +30,40 @@ h4 {
   @apply font-heading;
 }
 
-/* Full-viewport scroll sections */
+/* Full-viewport slide sections */
 .invite-section {
   min-height: 100vh;
   min-height: 100dvh;
   position: relative;
   overflow: hidden;
+}
+
+/* On phones every slide is locked to exactly one screen — no scrolling.
+   Content is trimmed per-slide (via sm: utilities) so it always fits. */
+@media (max-width: 639px) {
+  .invite-section {
+    height: 100dvh;
+    min-height: 0;
+  }
+  /* leave room for the top RSVP pill and bottom nav controls */
+  .mobile-safe {
+    padding-top: 3.25rem;
+    padding-bottom: 6rem;
+  }
+  /* opt-in: slides that may exceed one screen scroll internally
+     (e.g. the story timeline) instead of being trimmed to fit */
+  .invite-section.allow-scroll {
+    overflow-y: auto;
+  }
+}
+
+/* Swipe hint nudge */
+@keyframes swipe-nudge {
+  0%, 100% { transform: translateX(0); opacity: 0.35; }
+  50% { transform: translateX(-8px); opacity: 0.7; }
+}
+.animate-swipe-nudge {
+  animation: swipe-nudge 1.8s ease-in-out infinite;
 }
 
 /* Animated gold-foil lettering */

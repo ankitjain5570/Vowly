@@ -26,9 +26,9 @@ function FaqItem({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-3.5 text-left"
+        className="flex w-full cursor-pointer items-center justify-between gap-4 px-4 py-2 text-left sm:px-5 sm:py-3.5"
       >
-        <span className="font-heading text-lg text-royal-gold-light sm:text-xl">{faq.q}</span>
+        <span className="font-heading text-sm text-royal-gold-light sm:text-xl">{faq.q}</span>
         <motion.svg
           viewBox="0 0 24 24"
           className="h-4 w-4 shrink-0"
@@ -67,7 +67,10 @@ function FaqItem({
 export function GuestInfoSection() {
   const { guestInfo } = weddingConfig
   const { theme } = guestInfo
-  const [openIndex, setOpenIndex] = useState<number>(0)
+  // Start collapsed on phones (space is tight), first-open on larger screens.
+  const [openIndex, setOpenIndex] = useState<number>(() =>
+    typeof window !== 'undefined' && window.innerWidth < 640 ? -1 : 0,
+  )
 
   return (
     <section
@@ -82,7 +85,7 @@ export function GuestInfoSection() {
       <GoldDust />
       <div className="vignette" />
 
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-5 py-14 sm:px-8 lg:px-10">
+      <div className="mobile-safe relative z-10 mx-auto w-full max-w-6xl px-5 py-6 sm:py-14 sm:px-8 lg:px-10">
         {/* Header */}
         <div className="text-center">
           <motion.p
@@ -93,14 +96,14 @@ export function GuestInfoSection() {
           >
             {guestInfo.eyebrow}
           </motion.p>
-          <h2 className="text-5xl sm:text-6xl">
+          <h2 className="text-4xl sm:text-6xl">
             <LetterReveal text={guestInfo.title} delay={0.55} />
           </h2>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 1 }}
-            className="mx-auto my-5 flex max-w-xs items-center gap-3"
+            className="mx-auto my-3 flex max-w-xs items-center gap-3 sm:my-5"
           >
             <span className="h-px flex-1 bg-royal-gold/60" />
             <span className="h-2 w-2 rotate-45 bg-royal-gold" />
@@ -108,13 +111,13 @@ export function GuestInfoSection() {
           </motion.div>
         </div>
 
-        <div className="mt-4 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
+        <div className="mt-3 grid gap-4 sm:mt-4 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
           {/* ---------------- FAQs ---------------- */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.9 }}
-            className="space-y-3"
+            className="space-y-1.5 sm:space-y-3"
           >
             {guestInfo.faqs.map((faq, i) => (
               <FaqItem
@@ -132,9 +135,10 @@ export function GuestInfoSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.1 }}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6"
           >
-            <div>
+            {/* Hotels — hidden on phones for fit; on tablet/desktop shown */}
+            <div className="hidden sm:block">
               <h3
                 className="mb-3 text-xs uppercase tracking-[0.3em]"
                 style={{ color: theme.accent }}
@@ -184,7 +188,7 @@ export function GuestInfoSection() {
                 {guestInfo.contacts.map((c) => (
                   <div
                     key={c.name}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-2.5 sm:p-4"
                     style={{ borderColor: '#ffffff22', backgroundColor: '#ffffff08' }}
                   >
                     <div>

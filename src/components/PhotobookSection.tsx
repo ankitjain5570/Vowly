@@ -71,9 +71,9 @@ export function PhotobookSection() {
         src={hero}
         alt={`Photobook hero ${spread + 1}`}
         loading="lazy"
-        className="h-64 w-48 object-cover sm:h-[28rem] sm:w-80"
+        className="h-36 w-28 object-cover sm:h-[28rem] sm:w-80"
       />
-      <figcaption className="mt-2 font-heading text-sm italic text-[#8A6A3B]">
+      <figcaption className="mt-1.5 font-heading text-xs italic text-[#8A6A3B] sm:mt-2 sm:text-sm">
         {couple.bride} &amp; {couple.groom}
       </figcaption>
     </figure>
@@ -84,19 +84,19 @@ export function PhotobookSection() {
       className="relative bg-[#FBF3E4] p-2.5 pb-7 shadow-inner"
       style={{ boxShadow: 'inset 0 0 22px #0002' }}
     >
-      <div className="grid grid-cols-2 grid-rows-2 gap-2 sm:h-[28rem] sm:w-80">
+      <div className="grid grid-cols-4 grid-rows-1 gap-1.5 sm:grid-cols-2 sm:grid-rows-2 sm:gap-2 sm:h-[28rem] sm:w-80">
         {moments.map((src, i) => (
           <div key={i} className="overflow-hidden bg-white p-1 shadow-sm" style={{ rotate: tilts[i] }}>
             <img
               src={src}
               alt={`Photobook moment ${spread + 1}.${i + 1}`}
               loading="lazy"
-              className="h-24 w-full object-cover sm:h-full"
+              className="h-14 w-full object-cover sm:h-full"
             />
           </div>
         ))}
       </div>
-      <figcaption className="mt-2 font-heading text-sm italic text-[#8A6A3B]">
+      <figcaption className="mt-1.5 font-heading text-xs italic text-[#8A6A3B] sm:mt-2 sm:text-sm">
         Moments &amp; memories
       </figcaption>
     </figure>
@@ -115,7 +115,7 @@ export function PhotobookSection() {
       <GoldDust />
       <div className="vignette" />
 
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-5 py-12 text-center sm:px-8">
+      <div className="mobile-safe relative z-10 mx-auto w-full max-w-6xl px-5 py-6 text-center sm:py-12 sm:px-8">
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -124,14 +124,14 @@ export function PhotobookSection() {
         >
           {photobook.eyebrow}
         </motion.p>
-        <h2 className="text-5xl sm:text-6xl">
+        <h2 className="text-4xl sm:text-6xl">
           <LetterReveal text={photobook.title} delay={0.55} />
         </h2>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1 }}
-          className="mx-auto my-5 flex max-w-xs items-center gap-3"
+          className="mx-auto my-3 flex max-w-xs items-center gap-3 sm:my-5"
         >
           <span className="h-px flex-1 bg-royal-gold/60" />
           <span className="h-2 w-2 rotate-45 bg-royal-gold" />
@@ -184,7 +184,7 @@ export function PhotobookSection() {
                       {momentsFrame}
                     </div>
                     {/* mobile: stacked single-page collage */}
-                    <div className="flex flex-col gap-3 sm:hidden">
+                    <div className="flex flex-col gap-2 sm:hidden">
                       {heroFrame}
                       {momentsFrame}
                     </div>
@@ -198,7 +198,7 @@ export function PhotobookSection() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.4 }}
-              className="mt-5 flex items-center justify-center gap-4"
+              className="mt-3 flex items-center justify-center gap-4 sm:mt-5"
             >
               <button
                 type="button"
@@ -227,7 +227,7 @@ export function PhotobookSection() {
               </button>
             </motion.div>
 
-            <p className="mt-3 text-xs font-light text-royal-ivory/60">{photobook.note}</p>
+            <p className="mt-3 hidden text-xs font-light text-royal-ivory/60 sm:block">{photobook.note}</p>
           </>
         )}
       </div>

@@ -5,13 +5,9 @@ import { EntryScreen } from './components/EntryScreen'
 import { InviteCarousel } from './components/Carousel'
 
 function App() {
-  // 1. Revisit check & state management
-  const [entryCompleted, setEntryCompleted] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('wedding_invite_visited') === 'true'
-    }
-    return false
-  })
+  // Always begin on the invitation book — every page load / refresh opens
+  // from the start (no "already visited" shortcut).
+  const [entryCompleted, setEntryCompleted] = useState<boolean>(false)
 
   // `musicOn` is the single source of truth for whether music SHOULD play.
   // The mute button flips it; an effect syncs the actual <audio> to match, so
@@ -82,11 +78,10 @@ function App() {
   const triggerGoldenTransition = useCallback(() => {
     setTransitionState('fading-in')
     setTimeout(() => {
-      // Unmount the cover & video layout by setting entryCompleted = true
+      // Reveal the carousel (the book has finished opening)
       setEntryCompleted(true)
-      localStorage.setItem('wedding_invite_visited', 'true')
-      
-      // Reset scroll position so the user starts at the top of the Engagement section
+
+      // Reset scroll position so the user starts at the top of the first slide
       window.scrollTo({ top: 0, behavior: 'auto' })
 
       setTransitionState('fading-out')

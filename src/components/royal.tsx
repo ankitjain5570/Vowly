@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import type { ReactNode } from 'react'
+﻿import { motion } from 'framer-motion'
+import { Fragment, type ReactNode } from 'react'
 
 /**
  * Shared "royal cinematic" building blocks: gold dust atmosphere, god rays,
@@ -338,19 +338,34 @@ export function LetterReveal({
   delay?: number
   step?: number
 }) {
+  // Group letters into per-word spans so a line never breaks mid-word: each
+  // word stays whole (whitespace-nowrap) and lines break only at the spaces
+  // between words. `i` keeps the reveal stagger continuous across words.
+  const words = text.split(' ')
+  let i = 0
   return (
     <span className={className} aria-label={text}>
-      {text.split('').map((ch, i) => (
-        <motion.span
-          key={i}
-          className="gold-text inline-block"
-          initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ delay: delay + i * step, duration: 0.55, ease: 'easeOut' }}
-          aria-hidden="true"
-        >
-          {ch === ' ' ? ' ' : ch}
-        </motion.span>
+      {words.map((word, wi) => (
+        <Fragment key={wi}>
+          <span className="inline-block whitespace-nowrap">
+            {[...word].map((ch) => {
+              const idx = i++
+              return (
+                <motion.span
+                  key={idx}
+                  className="gold-text inline-block"
+                  initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ delay: delay + idx * step, duration: 0.55, ease: 'easeOut' }}
+                  aria-hidden="true"
+                >
+                  {ch}
+                </motion.span>
+              )
+            })}
+          </span>
+          {wi < words.length - 1 ? ' ' : null}
+        </Fragment>
       ))}
     </span>
   )

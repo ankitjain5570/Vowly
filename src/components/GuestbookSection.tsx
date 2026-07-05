@@ -39,7 +39,7 @@ export function GuestbookSection() {
       <GoldDust />
       <div className="vignette" />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-5xl items-center gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
+      <div className="mobile-safe relative z-10 mx-auto grid w-full max-w-5xl items-center gap-4 px-5 py-6 sm:gap-10 sm:py-14 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
         {/* ---------------- Left: invitation to write ---------------- */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -47,18 +47,18 @@ export function GuestbookSection() {
           transition={{ duration: 0.8, delay: 0.35 }}
           className="text-center lg:text-left"
         >
-          <p className="mb-3 text-[10px] uppercase tracking-[0.4em] text-royal-ivory/70 sm:text-xs">
+          <p className="mb-2 text-[10px] uppercase tracking-[0.4em] text-royal-ivory/70 sm:mb-3 sm:text-xs">
             {guestbook.eyebrow}
           </p>
-          <h2 className="text-5xl leading-none sm:text-6xl">
+          <h2 className="text-4xl leading-none sm:text-6xl">
             <LetterReveal text={guestbook.title} delay={0.55} step={0.05} />
           </h2>
-          <div className="mx-auto my-5 flex max-w-60 items-center gap-3 lg:mx-0">
+          <div className="mx-auto my-3 flex max-w-60 items-center gap-3 sm:my-5 lg:mx-0">
             <span className="h-px flex-1 bg-royal-gold/60" />
             <span className="h-2 w-2 rotate-45 bg-royal-gold" />
             <span className="h-px flex-1 bg-royal-gold/60" />
           </div>
-          <p className="mx-auto max-w-md text-sm font-light leading-relaxed text-royal-ivory/80 sm:text-base lg:mx-0">
+          <p className="mx-auto hidden max-w-md text-sm font-light leading-relaxed text-royal-ivory/80 sm:block sm:text-base lg:mx-0">
             {guestbook.prompt}
           </p>
           <div className="mt-8 hidden justify-center lg:flex lg:justify-start">
@@ -73,7 +73,7 @@ export function GuestbookSection() {
           transition={{ duration: 0.9, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           <div
-            className="rounded-2xl border p-5 sm:p-7"
+            className="rounded-2xl border p-4 sm:p-7"
             style={{
               borderColor: `${theme.accent}55`,
               backgroundColor: '#ffffff0a',
@@ -109,9 +109,9 @@ export function GuestbookSection() {
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                rows={6}
+                rows={4}
                 placeholder={`Dear ${couple.bride} & ${couple.groom}…`}
-                className="w-full resize-none rounded-lg border bg-black/25 px-4 py-3 text-sm font-light leading-relaxed text-royal-ivory placeholder:text-royal-ivory/35 focus:outline-none"
+                className="w-full resize-none rounded-lg border bg-black/25 px-4 py-3 text-sm font-light leading-relaxed text-royal-ivory placeholder:text-royal-ivory/35 focus:outline-none sm:min-h-40"
                 style={{ borderColor: overLimit ? '#e05c5c' : '#ffffff26' }}
                 onFocus={(e) => {
                   if (!overLimit) e.currentTarget.style.borderColor = `${theme.accent}90`

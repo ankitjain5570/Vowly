@@ -53,7 +53,7 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
         variants={container}
         initial="hidden"
         animate="show"
-        className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12 lg:px-10"
+        className="mobile-safe relative z-10 mx-auto grid w-full max-w-6xl items-center gap-4 px-5 py-6 sm:gap-8 sm:py-12 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12 lg:px-10"
       >
         {/* ---------------- Left: headline, story, polaroids ---------------- */}
         <div className="text-center lg:text-left">
@@ -63,13 +63,13 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
           >
             Where it all begins
           </motion.p>
-          <h2 className="text-6xl leading-none sm:text-7xl lg:text-8xl">
+          <h2 className="text-5xl leading-none sm:text-7xl lg:text-8xl">
             <LetterReveal text={fn.name} delay={0.6} />
           </h2>
 
           <motion.div
             variants={fadeUp}
-            className="mx-auto my-5 flex max-w-60 items-center gap-3 lg:mx-0"
+            className="mx-auto my-3 flex max-w-60 items-center gap-3 sm:my-5 lg:mx-0"
           >
             <span className="h-px flex-1 bg-royal-gold/60" />
             <span className="h-2 w-2 rotate-45 bg-royal-gold" />
@@ -83,22 +83,22 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
           {fn.story && (
             <motion.p
               variants={fadeUp}
-              className="mx-auto mt-4 max-w-xl text-sm font-light leading-relaxed text-royal-ivory/80 sm:text-base lg:mx-0"
+              className="mx-auto mt-4 hidden max-w-xl text-sm font-light leading-relaxed text-royal-ivory/80 sm:block sm:text-base lg:mx-0"
             >
               {fn.story}
             </motion.p>
           )}
 
           {/* Venue */}
-          <motion.div variants={fadeUp} className="mt-5 space-y-1 text-sm">
+          <motion.div variants={fadeUp} className="mt-3 space-y-1 text-sm sm:mt-5">
             <p className="font-medium text-royal-ivory/95">{fn.venueName}</p>
-            <p className="font-light text-royal-ivory/70">{fn.venueAddress}</p>
+            <p className="hidden font-light text-royal-ivory/70 sm:block">{fn.venueAddress}</p>
           </motion.div>
 
           {/* Actions */}
           <motion.div
             variants={fadeUp}
-            className="mt-5 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
+            className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:mt-5 lg:justify-start"
           >
             <a
               href={fn.mapsUrl}
@@ -131,7 +131,7 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
           </motion.div>
 
           {/* Dress code chip */}
-          <motion.div variants={fadeUp} className="mt-5">
+          <motion.div variants={fadeUp} className="mt-4 hidden sm:mt-5 sm:block">
             <span
               className="inline-block rounded-full border px-4 py-1.5 text-[10px] uppercase tracking-[0.2em] text-royal-ivory/85"
               style={{ borderColor: `${theme.accent}60`, backgroundColor: '#ffffff0d' }}
@@ -140,11 +140,11 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
             </span>
           </motion.div>
 
-          {/* Overlapping polaroid photos */}
+          {/* Overlapping polaroid photos (hidden on phones for fit) */}
           {fn.photos && fn.photos.length > 0 && (
             <motion.div
               variants={fadeUp}
-              className="mt-7 flex items-center justify-center lg:justify-start"
+              className="mt-7 hidden items-center justify-center sm:flex lg:justify-start"
             >
               {fn.photos.slice(0, 3).map((src, i) => (
                 <motion.figure
@@ -176,7 +176,7 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
         {/* ---------------- Right: avatar + ring exchange scene ---------------- */}
         <motion.div variants={fadeUp} className="relative">
           {fn.avatar && (
-            <div className="mb-4 flex justify-center">
+            <div className="mb-4 hidden justify-center sm:flex">
               <div className="relative">
                 <span
                   className="absolute -top-3 left-1/2 z-20 h-3 w-3 -translate-x-1/2 rotate-45"
@@ -202,7 +202,7 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
             </div>
           )}
           <motion.div style={{ rotateY: sceneRotateY, rotateX: sceneRotateX }}>
-            <div className="mx-auto w-full max-w-xl lg:max-w-none">
+            <div className="mx-auto w-full max-w-[240px] sm:max-w-xl lg:max-w-none">
               <RingExchange key={replayKey} play initials={initials} primary={theme.primary} />
             </div>
           </motion.div>

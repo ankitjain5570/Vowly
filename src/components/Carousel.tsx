@@ -85,6 +85,8 @@ function DiamondArrow({
  */
 export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void }) {
   const invite = useMemo(() => resolveInvite(), [])
+  // set while the RSVP form is open — freezes auto-advance and navigation
+  const [autoBlocked, setAutoBlocked] = useState(false)
 
   const slides = useMemo(() => {
     const functionSlides = invite.functions.map((fn) => ({
@@ -108,7 +110,17 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
     return [
       ...functionSlides,
       ...invite.extras.map((e) => extraSlides[e]),
-      { id: 'rsvp', label: 'RSVP', node: <RSVPSection onReplayEntry={onReplayEntry} /> },
+      {
+        id: 'rsvp',
+        label: 'RSVP',
+        node: (
+          <RSVPSection
+            onReplayEntry={onReplayEntry}
+            functions={invite.functions}
+            onFormOpenChange={setAutoBlocked}
+          />
+        ),
+      },
     ]
   }, [invite, onReplayEntry])
 
@@ -127,7 +139,7 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
 
   // auto-advance timer (restarts on slide change / resume)
   useEffect(() => {
-    if (paused) return
+    if (paused || autoBlocked) return
     const started = Date.now()
     const t = setInterval(() => {
       const p = (Date.now() - started) / SLIDE_MS
@@ -138,14 +150,14 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
       }
     }, 100)
     return () => clearInterval(t)
-  }, [paused, index, go])
+  }, [paused, autoBlocked, index, go])
 
   // keyboard controls
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      // don't hijack keys while typing in the guestbook
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+      // don't hijack keys while typing in a form, or while the RSVP modal is open
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || autoBlocked) return
       if (e.key === 'ArrowRight') go(index + 1, 1)
       else if (e.key === 'ArrowLeft') go(index - 1, -1)
       else if (e.key === ' ') {
@@ -155,7 +167,7 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [index, go])
+  }, [index, go, autoBlocked])
 
   const C = 2 * Math.PI * 21 // progress ring circumference
   const rsvpIndex = slides.length - 1
@@ -172,10 +184,10 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
           initial="enter"
           animate="center"
           exit="exit"
-          className="absolute inset-0 overflow-y-auto overflow-x-hidden"
+          className="absolute inset-0 overflow-hidden sm:overflow-y-auto sm:overflow-x-hidden"
           onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
           onTouchEnd={(e) => {
-            if (touchX.current === null) return
+            if (touchX.current === null || autoBlocked) return
             const dx = e.changedTouches[0].clientX - touchX.current
             touchX.current = null
             if (dx < -50) go(index + 1, 1)
@@ -205,6 +217,24 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
           </svg>
           RSVP
         </motion.button>
+      )}
+
+      {/* swipe hint — mobile only, hidden on the last slide */}
+      {index !== rsvpIndex && (
+        <motion.div
+          key={`hint-${index}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="pointer-events-none fixed right-3 top-1/2 z-40 flex -translate-y-1/2 flex-col items-center gap-1 text-royal-gold-light sm:hidden"
+        >
+          <span className="animate-swipe-nudge flex items-center gap-0.5">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
+            </svg>
+          </span>
+          <span className="text-[8px] uppercase tracking-[0.25em] opacity-60">Swipe</span>
+        </motion.div>
       )}
 
       {/* side dots (desktop only) */}
