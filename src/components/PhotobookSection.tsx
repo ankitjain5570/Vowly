@@ -71,7 +71,7 @@ export function PhotobookSection() {
         src={hero}
         alt={`Photobook hero ${spread + 1}`}
         loading="lazy"
-        className="h-36 w-28 object-cover sm:h-[28rem] sm:w-80"
+        className="h-36 w-28 object-cover sm:h-[min(26rem,44vh)] sm:w-72"
       />
       <figcaption className="mt-1.5 font-heading text-xs italic text-[#8A6A3B] sm:mt-2 sm:text-sm">
         {couple.bride} &amp; {couple.groom}
@@ -84,7 +84,7 @@ export function PhotobookSection() {
       className="relative bg-[#FBF3E4] p-2.5 pb-7 shadow-inner"
       style={{ boxShadow: 'inset 0 0 22px #0002' }}
     >
-      <div className="grid grid-cols-4 grid-rows-1 gap-1.5 sm:grid-cols-2 sm:grid-rows-2 sm:gap-2 sm:h-[28rem] sm:w-80">
+      <div className="grid grid-cols-4 grid-rows-1 gap-1.5 sm:grid-cols-2 sm:grid-rows-2 sm:gap-2 sm:h-[min(26rem,44vh)] sm:w-72">
         {moments.map((src, i) => (
           <div key={i} className="overflow-hidden bg-white p-1 shadow-sm" style={{ rotate: tilts[i] }}>
             <img
@@ -105,7 +105,7 @@ export function PhotobookSection() {
   return (
     <section
       id="photobook"
-      className="invite-section flex items-center justify-center text-royal-ivory"
+      className="invite-section flex items-center justify-center text-royal-ivory lg:items-start"
       style={{
         background: `radial-gradient(ellipse at 50% 26%, ${theme.bgTo} 0%, ${theme.bgFrom} 72%)`,
       }}
@@ -115,7 +115,7 @@ export function PhotobookSection() {
       <GoldDust />
       <div className="vignette" />
 
-      <div className="mobile-safe relative z-10 mx-auto w-full max-w-6xl px-5 py-6 text-center sm:py-12 sm:px-8">
+      <div className="mobile-safe relative z-10 mx-auto w-full max-w-6xl px-5 py-6 text-center sm:py-12 sm:px-8 lg:py-8">
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,6 +138,10 @@ export function PhotobookSection() {
           <span className="h-px flex-1 bg-royal-gold/60" />
         </motion.div>
 
+        <p className="mx-auto -mt-1 mb-2 hidden max-w-md text-xs font-light text-royal-ivory/60 sm:block">
+          {photobook.note}
+        </p>
+
         {PHOTOS.length === 0 ? (
           <p className="mt-10 text-sm font-light text-royal-ivory/70">
             Add photos to the <span className="text-royal-gold-light">Photobook/</span> folder to
@@ -150,7 +154,7 @@ export function PhotobookSection() {
               initial={{ opacity: 0, y: 40, rotateX: 14 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               transition={{ duration: 1, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              className="mx-auto w-fit"
+              className="relative mx-auto w-fit"
               style={{ perspective: 1800 }}
             >
               <div
@@ -191,43 +195,39 @@ export function PhotobookSection() {
                   </motion.div>
                 </AnimatePresence>
               </div>
-            </motion.div>
 
-            {/* page controls */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.4 }}
-              className="mt-3 flex items-center justify-center gap-4 sm:mt-5"
-            >
+              {/* page-turn arrows flanking the album */}
               <button
                 type="button"
                 onClick={() => turn(-1)}
                 aria-label="Previous page"
-                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border transition-colors hover:bg-white/10"
-                style={{ borderColor: `${theme.accent}70`, color: theme.accent }}
+                className="absolute left-1 top-1/2 z-30 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border bg-black/45 backdrop-blur-sm transition-colors hover:bg-black/70 sm:-left-4"
+                style={{ borderColor: `${theme.accent}80`, color: theme.accent }}
               >
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 5l-7 7 7 7" />
                 </svg>
               </button>
-              <span className="text-xs tracking-[0.25em] text-royal-ivory/70">
-                {spread + 1} / {spreadCount}
-              </span>
               <button
                 type="button"
                 onClick={() => turn(1)}
                 aria-label="Next page"
-                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border transition-colors hover:bg-white/10"
-                style={{ borderColor: `${theme.accent}70`, color: theme.accent }}
+                className="absolute right-1 top-1/2 z-30 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border bg-black/45 backdrop-blur-sm transition-colors hover:bg-black/70 sm:-right-4"
+                style={{ borderColor: `${theme.accent}80`, color: theme.accent }}
               >
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
-            </motion.div>
 
-            <p className="mt-3 hidden text-xs font-light text-royal-ivory/60 sm:block">{photobook.note}</p>
+              {/* page counter on the album's lower edge */}
+              <span
+                className="absolute -bottom-3 left-1/2 z-30 -translate-x-1/2 rounded-full border px-3 py-0.5 text-[11px] tracking-[0.25em] text-royal-ivory/80"
+                style={{ borderColor: `${theme.accent}70`, background: 'linear-gradient(160deg, #2A1708, #150B03)' }}
+              >
+                {spread + 1} / {spreadCount}
+              </span>
+            </motion.div>
           </>
         )}
       </div>
