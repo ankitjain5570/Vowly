@@ -13,27 +13,34 @@ import { NavDots } from './NavDots'
 
 const SLIDE_MS = 15_000
 
-/** 3D coverflow-style slide transition, direction-aware. */
+/**
+ * Book page-turn transition, direction-aware. Going forward, the incoming
+ * slide swings in like a page hinged on its left edge while the outgoing
+ * one folds away on its right edge (mirrored going back). Brightness
+ * shading during the swing sells the depth, like a real turning page.
+ */
 const variants: Variants = {
   enter: (dir: number) => ({
-    x: dir >= 0 ? '55%' : '-55%',
+    rotateY: dir >= 0 ? 70 : -70,
+    x: dir >= 0 ? '10%' : '-10%',
     opacity: 0,
-    rotateY: dir >= 0 ? 16 : -16,
-    scale: 0.92,
+    originX: dir >= 0 ? 0 : 1,
+    filter: 'brightness(0.5)',
   }),
   center: {
+    rotateY: 0,
     x: 0,
     opacity: 1,
-    rotateY: 0,
-    scale: 1,
-    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+    filter: 'brightness(1)',
+    transition: { duration: 1.05, ease: [0.24, 0.9, 0.32, 1] },
   },
   exit: (dir: number) => ({
-    x: dir >= 0 ? '-45%' : '45%',
+    rotateY: dir >= 0 ? -70 : 70,
+    x: dir >= 0 ? '-10%' : '10%',
     opacity: 0,
-    rotateY: dir >= 0 ? -13 : 13,
-    scale: 0.94,
-    transition: { duration: 0.6, ease: 'easeIn' },
+    originX: dir >= 0 ? 1 : 0,
+    filter: 'brightness(0.5)',
+    transition: { duration: 0.8, ease: [0.55, 0.06, 0.68, 0.19] },
   }),
 }
 

@@ -44,6 +44,12 @@ export interface WeddingFunction {
   hero?: boolean
   /** Illustrated couple avatar for this function (site-root-relative path) */
   avatar?: string
+  /**
+   * Desktop composition for this slide (mobile always uses the compact
+   * stack): 'panel-right' = title left / arch panel right (default),
+   * 'panel-left' = mirrored, 'centered' = symmetric center composition.
+   */
+  layout?: 'panel-right' | 'panel-left' | 'centered'
   theme: FunctionTheme
 }
 
@@ -340,6 +346,7 @@ export const weddingConfig: WeddingConfig = {
       description:
         'A morning drenched in turmeric, laughter and blessings — come ready to get your hands (and clothes) gloriously yellow.',
       avatar: '/media/avatars/haldi.jpg',
+      layout: 'panel-left',
       theme: {
         primary: '#F5A623',
         accent: '#FFD95E',
@@ -386,6 +393,7 @@ export const weddingConfig: WeddingConfig = {
       description:
         'Clink glasses under the stars — signature cocktails, sangeet performances, and a dance floor that stays open till the last song.',
       avatar: '/media/avatars/cocktail.jpg',
+      layout: 'centered',
       theme: {
         primary: '#8FA8FF',
         accent: '#E8CF7A',
@@ -433,6 +441,7 @@ export const weddingConfig: WeddingConfig = {
       description:
         'One last evening of dinner, toasts and photographs, as we greet you as a married couple for the very first time.',
       avatar: '/media/avatars/reception.jpg',
+      layout: 'panel-left',
       theme: {
         primary: '#D9A7E0',
         accent: '#E8CF7A',
