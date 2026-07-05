@@ -110,17 +110,41 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
 
       {opening && <OpeningBurst />}
 
-      {/* The invitation book */}
-      <motion.button
-        type="button"
-        onClick={handleOpen}
-        aria-label="Open the wedding invitation"
-        className="relative z-10 block cursor-pointer"
-        style={{ perspective: 2000 }}
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, ease: 'easeOut' }}
-      >
+      <div className="relative z-10 flex flex-col items-center gap-3 sm:gap-5">
+        {/* Ganesha — an auspicious blessing atop the invitation */}
+        <motion.div
+          className="relative"
+          initial={{ opacity: 0, y: -16, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 1, delay: 0.15, ease: 'easeOut' }}
+        >
+          {/* divine halo glow */}
+          <span
+            aria-hidden="true"
+            className="absolute left-1/2 top-1/2 -z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full sm:h-40 sm:w-40"
+            style={{ background: 'radial-gradient(circle, rgba(232,207,122,0.4), transparent 65%)', filter: 'blur(6px)' }}
+          />
+          <motion.img
+            src="/media/ganesha.png"
+            alt="Lord Ganesha"
+            className="h-24 w-24 object-contain sm:h-28 sm:w-28"
+            style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.55))' }}
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </motion.div>
+
+        {/* The invitation book */}
+        <motion.button
+          type="button"
+          onClick={handleOpen}
+          aria-label="Open the wedding invitation"
+          className="relative block cursor-pointer"
+          style={{ perspective: 2000 }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.15, ease: 'easeOut' }}
+        >
         <motion.div
           className="relative h-105 w-72 sm:h-120 sm:w-80"
           animate={opening ? { y: 0 } : { y: [0, -8, 0] }}
@@ -239,7 +263,8 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
             </div>
           </motion.div>
         </motion.div>
-      </motion.button>
+        </motion.button>
+      </div>
     </section>
   )
 }
