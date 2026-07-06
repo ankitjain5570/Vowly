@@ -4,8 +4,9 @@ import { isAuthed, logout } from './auth'
 import { AdminLogin } from './AdminLogin'
 import { Overview } from './Overview'
 import { Dashboard } from './Dashboard'
+import { InviteBuilder } from './InviteBuilder'
 
-type View = 'overview' | 'dashboard'
+type View = 'overview' | 'dashboard' | 'invites'
 
 /**
  * Root of the /admin console. Gated by login; once in, a top bar switches
@@ -44,6 +45,9 @@ export function AdminApp() {
             <NavButton active={view === 'dashboard'} onClick={() => setView('dashboard')}>
               Dashboard
             </NavButton>
+            <NavButton active={view === 'invites'} onClick={() => setView('invites')}>
+              Invites
+            </NavButton>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -68,11 +72,11 @@ export function AdminApp() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        {view === 'overview' ? (
+        {view === 'overview' && (
           <Overview records={records} onOpenDashboard={() => setView('dashboard')} />
-        ) : (
-          <Dashboard records={records} onMove={moveRsvp} />
         )}
+        {view === 'dashboard' && <Dashboard records={records} onMove={moveRsvp} />}
+        {view === 'invites' && <InviteBuilder />}
       </main>
     </div>
   )

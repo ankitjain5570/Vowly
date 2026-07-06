@@ -34,6 +34,8 @@ export function RSVPModal({
   const [name, setName] = useState('')
   const [primaryFns, setPrimaryFns] = useState<string[]>(allIds)
   const [guests, setGuests] = useState<Guest[]>([])
+  const [attending, setAttending] = useState(true)
+  const [regretNote, setRegretNote] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
   const togglePrimary = (id: string) => {
@@ -68,19 +70,32 @@ export function RSVPModal({
       }),
     )
 
-  const canSubmit = name.trim().length > 0 && primaryFns.length > 0
+  const canSubmit = attending
+    ? name.trim().length > 0 && primaryFns.length > 0
+    : name.trim().length > 0
 
   const submit = () => {
-    const payload = {
-      primary: { name: name.trim(), functions: primaryFns },
-      guests: guests.map((g, i) => ({
-        name: g.name.trim() || `Guest ${i + 2}`,
-        functions: g.fns,
-      })),
-      totalHeadcount: 1 + guests.length,
+    const base = {
       hashtag: weddingConfig.hashtag,
       submittedAt: new Date().toISOString(),
     }
+    const payload = attending
+      ? {
+          ...base,
+          attending: true,
+          primary: { name: name.trim(), functions: primaryFns },
+          guests: guests.map((g, i) => ({
+            name: g.name.trim() || `Guest ${i + 2}`,
+            functions: g.fns,
+          })),
+          totalHeadcount: 1 + guests.length,
+        }
+      : {
+          ...base,
+          attending: false,
+          primary: { name: name.trim() },
+          note: regretNote.trim(),
+        }
     // TODO: replace with a POST to the RSVP backend (e.g. Supabase) later.
     console.log('RSVP submitted:', payload)
     try {
@@ -143,9 +158,11 @@ export function RSVPModal({
               </motion.div>
               <h3 className="font-heading text-3xl text-royal-gold-light">Thank you!</h3>
               <p className="mx-auto mt-3 max-w-sm text-sm font-light text-royal-ivory/80">
-                Your RSVP for {1 + guests.length}{' '}
-                {1 + guests.length === 1 ? 'guest' : 'guests'} has been noted. We can’t wait to
-                celebrate with you.
+                {attending
+                  ? `Your RSVP for ${1 + guests.length} ${
+                      1 + guests.length === 1 ? 'guest' : 'guests'
+                    } has been noted. We can’t wait to celebrate with you.`
+                  : 'Thank you for letting us know — you’ll be dearly missed. Sending love your way.'}
               </p>
               <p className="mt-3 text-xs tracking-[0.3em]" style={{ color: GOLD }}>
                 {weddingConfig.hashtag}
@@ -187,12 +204,44 @@ export function RSVPModal({
                 />
               </label>
 
-              <div className="mt-4">
-                <span className="mb-2 block text-[10px] uppercase tracking-[0.25em]" style={{ color: GOLD_LIGHT }}>
-                  Which celebrations will you attend?
-                </span>
-                <FnChips functions={functions} selected={primaryFns} onToggle={togglePrimary} />
+              {/* accept / decline */}
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAttending(true)}
+                  aria-pressed={attending}
+                  className="rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors"
+                  style={
+                    attending
+                      ? { borderColor: GOLD, background: `linear-gradient(120deg, ${GOLD_LIGHT}, ${GOLD})`, color: '#3A0D18' }
+                      : { borderColor: '#ffffff26', color: '#fdf6eccc', backgroundColor: '#ffffff08' }
+                  }
+                >
+                  Joyfully accept
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAttending(false)}
+                  aria-pressed={!attending}
+                  className="rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors"
+                  style={
+                    !attending
+                      ? { borderColor: '#E0736B', backgroundColor: 'rgba(224,115,107,0.16)', color: '#E0736B' }
+                      : { borderColor: '#ffffff26', color: '#fdf6eccc', backgroundColor: '#ffffff08' }
+                  }
+                >
+                  Regretfully decline
+                </button>
               </div>
+
+              {attending && (
+              <>
+                <div className="mt-4">
+                  <span className="mb-2 block text-[10px] uppercase tracking-[0.25em]" style={{ color: GOLD_LIGHT }}>
+                    Which celebrations will you attend?
+                  </span>
+                  <FnChips functions={functions} selected={primaryFns} onToggle={togglePrimary} />
+                </div>
 
               {/* party size */}
               <div className="mt-6 flex items-center justify-between rounded-lg border p-3" style={{ borderColor: '#ffffff20', backgroundColor: '#ffffff08' }}>
@@ -251,21 +300,49 @@ export function RSVPModal({
                   </motion.div>
                 ))}
               </AnimatePresence>
+              </>
+              )}
+
+              {!attending && (
+                <label className="mt-4 block">
+                  <span className="mb-1.5 block text-[10px] uppercase tracking-[0.25em]" style={{ color: GOLD_LIGHT }}>
+                    A note for the couple (optional)
+                  </span>
+                  <textarea
+                    value={regretNote}
+                    onChange={(e) => setRegretNote(e.target.value)}
+                    rows={4}
+                    placeholder="We’re so sorry to miss it — here’s why…"
+                    className="w-full resize-none rounded-lg border bg-black/25 px-4 py-3 text-sm font-light leading-relaxed text-royal-ivory placeholder:text-royal-ivory/35 focus:outline-none"
+                    style={{ borderColor: '#ffffff26' }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = `${GOLD}90`)}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = '#ffffff26')}
+                  />
+                </label>
+              )}
 
               <button
                 type="button"
                 onClick={submit}
                 disabled={!canSubmit}
-                className={`mt-6 w-full rounded-full py-3 text-sm font-medium uppercase tracking-[0.2em] text-royal-maroon-deep transition-transform ${
+                className={`mt-6 w-full rounded-full py-3 text-sm font-medium uppercase tracking-[0.2em] transition-transform ${
                   canSubmit ? 'cursor-pointer hover:scale-[1.02] active:scale-95' : 'cursor-not-allowed opacity-50'
-                }`}
-                style={{ background: `linear-gradient(120deg, ${GOLD_LIGHT}, ${GOLD} 60%, #8C6D12)` }}
+                } ${attending ? 'text-royal-maroon-deep' : 'text-royal-ivory'}`}
+                style={
+                  attending
+                    ? { background: `linear-gradient(120deg, ${GOLD_LIGHT}, ${GOLD} 60%, #8C6D12)` }
+                    : { border: '1px solid rgba(224,115,107,0.6)', backgroundColor: 'rgba(224,115,107,0.16)' }
+                }
               >
-                Send RSVP · {1 + guests.length} {1 + guests.length === 1 ? 'guest' : 'guests'}
+                {attending
+                  ? `Send RSVP · ${1 + guests.length} ${1 + guests.length === 1 ? 'guest' : 'guests'}`
+                  : 'Send Regrets'}
               </button>
               {!canSubmit && (
                 <p className="mt-2 text-center text-[11px] text-royal-ivory/50">
-                  Add your name and pick at least one celebration.
+                  {attending
+                    ? 'Add your name and pick at least one celebration.'
+                    : 'Add your name to send your regrets.'}
                 </p>
               )}
             </>
