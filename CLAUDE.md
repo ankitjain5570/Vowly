@@ -56,7 +56,7 @@ src/
     GuestbookSection.tsx   # "Leave Us a Message" (word-limited, sends via WhatsApp)
     RSVPSection.tsx        # RSVP slide (final) + opens RSVPModal
     RSVPModal.tsx          # RSVP form: accept (per-guest, per-function) OR decline (+note)
-    decorations.tsx        # ambient animated scenes (marigold petals, henna vine, gold particles)
+    decorations.tsx        # ambient animated scenes, one per function vibe (marigolds, henna, lanterns, fairy lights, fireworks, roses)
     royal.tsx              # shared ornaments: palace silhouette, god rays, gold dust, arch panel, diyas, gold-foil letter reveal
     Countdown.tsx          # live countdown (wedding hero)
     Footer.tsx             # ⚠ legacy, currently UNUSED (sign-off now lives in RSVPSection)
@@ -75,7 +75,7 @@ src/
     ui.tsx                 # shared admin bits: status palette, badges, chips
 
   hooks/
-    useTilt.ts             # pointer-parallax (3D tilt) used across slides
+    useTilt.ts             # parallax (3D tilt): mouse on desktop, gyroscope on phones
     useActiveSection.ts    # (legacy scroll helper; carousel drives active slide now)
   theme/patterns.tsx       # SVG background patterns (mandala/paisley/floral/jaali/marigold)
   utils/calendar.ts        # generates .ics files for "Add to Calendar"
@@ -95,19 +95,31 @@ Couple Avatars/, Couple Photos/, Audio File/, Sample Videos/, God Idol/
 
 1. **Entry book** (`EntryScreen.tsx`): a closed royal "book" with a Ganesha idol
    on top and the couple monogram (auto-derived from the couple's first initials).
-   Tapping it plays an open animation, starts the background music, then reveals
-   the carousel. This screen is common to every invite variant. **It shows on
-   every page load/refresh** (no "already visited" shortcut).
+   Tapping it swings the cover open; after a beat on the inner page the whole
+   entry screen dissolves (slow fade + gentle scale, via AnimatePresence in
+   `App.tsx`) into the first slide, whose own entrance animations play
+   underneath. The book is larger on desktop (`lg:` sizes). This screen is
+   common to every invite variant. **It shows on every page load/refresh**
+   (no "already visited" shortcut).
 2. **Carousel** (`Carousel.tsx`): full-screen slides that **auto-advance every 15s**
    (`SLIDE_MS` constant) with pause/prev/next controls, right-side nav dots
    (desktop), pagination dots + swipe (mobile), and a persistent "RSVP" button.
-   Slide-to-slide uses a **book page-turn** transition.
+   Slide-to-slide uses **varied cinematic transitions** — each slide is
+   assigned one of four flavors by position (`drift` dissolve, `rise` lift,
+   `bloom` through-zoom, `aperture` frame-reveal, cycling), so consecutive
+   pages never transition the same way (see `FLAVORS` in `Carousel.tsx`).
 3. **Slide order** = the guest's function slides (chronological, from config) →
    the enabled "extra" slides (Our Story, Photobook, Good to Know, Wishes) →
    **RSVP** (always last). Which of these appear is decided by `resolveInvite()` (§4).
 
-Background music: managed in `App.tsx`. Autoplay is browser-gated, so it starts
-on the opening tap; a floating mute button toggles it.
+Background music: managed in `App.tsx`. **On by default** from the first
+visit; autoplay is browser-gated, so actual playback begins on the guest's
+first interaction (normally the opening tap). A floating mute button
+toggles it — and it is the ONLY thing allowed to change the music intent;
+never add code that force-enables music (it would override a guest's mute).
+Music pauses whenever
+the tab/app goes to the background and resumes on return (unless muted). The
+carousel's auto-advance also freezes while the tab is hidden.
 
 ---
 
@@ -190,7 +202,11 @@ form payload in `RSVPModal.tsx` already carries `attending: true/false` (+ decli
 Each function has a `theme` with: `primary` (bright motif color), `accent` (gold),
 `bgFrom`/`bgTo` (deep radial background gradient edge→center), `backgroundPattern`
 (`mandala|paisley|floral|jaali|marigold`), and `decoration`
-(`marigold-petals|henna-vine|gold-particles|none`). Story/Photobook/Guestbook/
+(`marigold-petals|henna-vine|gold-particles|starlit-night|fireworks|rose-petals|none`).
+Each function should use a distinct decoration so no two slides feel alike:
+engagement=rose-petals, haldi=marigold-petals, mehendi=henna-vine,
+cocktail=starlit-night, wedding=gold-particles, reception=fireworks.
+Story/Photobook/Guestbook/
 GuestInfo each have a smaller `{accent,bgFrom,bgTo}` theme.
 
 Desktop layout per function is set by `layout`:

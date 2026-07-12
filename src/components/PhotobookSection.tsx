@@ -64,14 +64,14 @@ export function PhotobookSection() {
 
   const heroFrame = (
     <figure
-      className="relative bg-[#FBF3E4] p-2.5 pb-7 shadow-inner"
+      className="relative w-full bg-[#FBF3E4] p-2 pb-5 shadow-inner sm:w-auto sm:p-2.5 sm:pb-7"
       style={{ boxShadow: 'inset 0 0 22px #0002' }}
     >
       <img
         src={hero}
         alt={`Photobook hero ${spread + 1}`}
         loading="lazy"
-        className="h-36 w-28 object-cover sm:h-[min(26rem,44vh)] sm:w-72"
+        className="h-[38vh] w-full object-cover object-center sm:h-[min(26rem,44vh)] sm:w-72"
       />
       <figcaption className="mt-1.5 font-heading text-xs italic text-[#8A6A3B] sm:mt-2 sm:text-sm">
         {couple.bride} &amp; {couple.groom}
@@ -81,7 +81,7 @@ export function PhotobookSection() {
 
   const momentsFrame = (
     <figure
-      className="relative bg-[#FBF3E4] p-2.5 pb-7 shadow-inner"
+      className="relative w-full bg-[#FBF3E4] p-2 pb-5 shadow-inner sm:w-auto sm:p-2.5 sm:pb-7"
       style={{ boxShadow: 'inset 0 0 22px #0002' }}
     >
       <div className="grid grid-cols-4 grid-rows-1 gap-1.5 sm:grid-cols-2 sm:grid-rows-2 sm:gap-2 sm:h-[min(26rem,44vh)] sm:w-72">
@@ -96,7 +96,7 @@ export function PhotobookSection() {
           </div>
         ))}
       </div>
-      <figcaption className="mt-1.5 font-heading text-xs italic text-[#8A6A3B] sm:mt-2 sm:text-sm">
+      <figcaption className="mt-1 font-heading text-[11px] italic text-[#8A6A3B] sm:mt-2 sm:text-sm">
         Moments &amp; memories
       </figcaption>
     </figure>
@@ -115,12 +115,12 @@ export function PhotobookSection() {
       <GoldDust />
       <div className="vignette" />
 
-      <div className="mobile-safe relative z-10 mx-auto w-full max-w-6xl px-5 py-6 text-center sm:py-12 sm:px-8 lg:py-8">
+      <div className="mobile-safe relative z-10 mx-auto w-full max-w-6xl px-5 py-3 text-center sm:py-12 sm:px-8 lg:py-8">
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.35 }}
-          className="mb-3 text-[10px] uppercase tracking-[0.4em] text-royal-ivory/70 sm:text-xs"
+          className="mb-2 text-[10px] uppercase tracking-[0.4em] text-royal-ivory/70 sm:mb-3 sm:text-xs"
         >
           {photobook.eyebrow}
         </motion.p>
@@ -131,7 +131,7 @@ export function PhotobookSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1 }}
-          className="mx-auto my-3 flex max-w-xs items-center gap-3 sm:my-5"
+          className="mx-auto my-2 flex max-w-xs items-center gap-3 sm:my-5"
         >
           <span className="h-px flex-1 bg-royal-gold/60" />
           <span className="h-2 w-2 rotate-45 bg-royal-gold" />
@@ -154,7 +154,7 @@ export function PhotobookSection() {
               initial={{ opacity: 0, y: 40, rotateX: 14 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               transition={{ duration: 1, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              className="relative mx-auto w-fit"
+              className="relative mx-auto w-full sm:w-fit"
               style={{ perspective: 1800 }}
             >
               <div

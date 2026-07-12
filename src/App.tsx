@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { weddingConfig } from './wedding.config'
 import { EntryScreen } from './components/EntryScreen'
 import { InviteCarousel } from './components/Carousel'
@@ -8,13 +9,16 @@ function App() {
   // from the start (no "already visited" shortcut).
   const [entryCompleted, setEntryCompleted] = useState<boolean>(false)
 
-  // `musicOn` is the single source of truth for whether music SHOULD play.
-  // The mute button flips it; an effect syncs the actual <audio> to match, so
-  // nothing (including pending autoplay-resume listeners) can restart audio
-  // the guest has muted.
-  const [musicOn, setMusicOn] = useState<boolean>(false)
+  // `musicOn` is the single source of truth for whether music SHOULD play,
+  // and ONLY the mute button changes it — nothing else may flip it back on,
+  // or the guest's mute gets overridden (that was a real bug: the entry
+  // hand-off used to force music on, undoing a mute tapped moments earlier).
+  //
+  // Music is ON by default from the very first visit. Browsers block
+  // autoplay until a user gesture, so the sync effect's fallback starts
+  // playback on the first tap/keypress — in practice the "tap to open".
+  const [musicOn, setMusicOn] = useState<boolean>(true)
 
-  // 2. Audio object initialization
   const audioRef = useRef<HTMLAudioElement | null>(null)
   // Live mirror of `musicOn` so listeners never read a stale intent (e.g. the
   // very tap that mutes must not also re-trigger a pending autoplay-resume).
@@ -22,10 +26,18 @@ function App() {
   musicOnRef.current = musicOn
 
   useEffect(() => {
+    // Self-healing singleton: if a previous player instance is still alive
+    // (dev HMR remounts, a duplicated mount), silence it before creating the
+    // new one — otherwise a "phantom" track keeps playing that the mute
+    // button no longer controls.
+    const w = window as unknown as { __weddingAudio?: HTMLAudioElement }
+    w.__weddingAudio?.pause()
+
     const audio = new Audio(weddingConfig.music)
     audio.loop = true
     audio.volume = 0.4
     audioRef.current = audio
+    w.__weddingAudio = audio
     return () => {
       audio.pause()
       audioRef.current = null
@@ -36,6 +48,10 @@ function App() {
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
+
+    // Hard guarantee: even if some in-flight play() lands after a mute (a
+    // pending promise, a stray resume listener), a muted element is silent.
+    audio.muted = !musicOn
 
     if (!musicOn) {
       audio.pause()
@@ -63,29 +79,56 @@ function App() {
     return cleanup
   }, [musicOn])
 
-  const toggleMusic = useCallback(() => setMusicOn((on) => !on), [])
+  // Pause music whenever the page goes to the background (tab switch, app
+  // switch, screen lock) and resume on return — but only if the guest still
+  // wants music on. `pagehide` covers iOS Safari, which can skip
+  // visibilitychange when the browser is closed or the user navigates away.
+  useEffect(() => {
+    const onVisibility = () => {
+      const audio = audioRef.current
+      if (!audio) return
+      if (document.hidden) audio.pause()
+      else if (musicOnRef.current) audio.play().catch(() => {})
+    }
+    const onPageHide = () => audioRef.current?.pause()
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('pagehide', onPageHide)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('pagehide', onPageHide)
+    }
+  }, [])
+
+  // Flip the intent AND act on the element immediately, inside the click
+  // gesture itself: muting must never depend on effect timing, and calling
+  // play() here (a user gesture) always satisfies the autoplay policy.
+  const toggleMusic = useCallback(() => {
+    const next = !musicOnRef.current
+    musicOnRef.current = next
+    const audio = audioRef.current
+    if (audio) {
+      audio.muted = !next
+      if (next) audio.play().catch(() => {})
+      else audio.pause()
+    }
+    setMusicOn(next)
+  }, [])
 
   // Called from the book-opening tap — a real user gesture, so play()
   // succeeds immediately instead of waiting for the autoplay fallback.
+  // Respects the mute button: if the guest muted, opening stays silent.
   const startMusic = useCallback(() => {
-    setMusicOn(true)
-    audioRef.current?.play().catch(() => {})
+    if (musicOnRef.current) audioRef.current?.play().catch(() => {})
   }, [])
 
-  // 3. Once the book has finished opening, reveal the carousel directly.
-  const triggerGoldenTransition = useCallback(() => {
+  // The book has finished opening — mount the carousel underneath; the
+  // entry screen then dissolves away over it (AnimatePresence exit below).
+  const revealInvitation = useCallback(() => {
     setEntryCompleted(true)
     window.scrollTo({ top: 0, behavior: 'auto' })
   }, [])
 
-  // 4. Turn music on once the invitation opens (the sync effect handles the
-  // actual playback + autoplay-block fallback).
-  useEffect(() => {
-    if (entryCompleted) setMusicOn(true)
-  }, [entryCompleted])
-
   const handleReplay = useCallback(() => {
-    setMusicOn(false)
     setEntryCompleted(false)
     // Scroll smoothly back to top where entry screen will show
     setTimeout(() => {
@@ -96,11 +139,23 @@ function App() {
   return (
     <>
       <main>
-        {!entryCompleted ? (
-          <EntryScreen onOpen={startMusic} onTransitionTrigger={triggerGoldenTransition} />
-        ) : (
-          <InviteCarousel onReplayEntry={handleReplay} />
-        )}
+        {entryCompleted && <InviteCarousel onReplayEntry={handleReplay} />}
+
+        {/* The entry screen sits above the carousel and, once the book has
+            opened, dissolves into it — a slow fade with a gentle drift
+            forward, so the first slide's own entrance plays underneath. */}
+        <AnimatePresence>
+          {!entryCompleted && (
+            <motion.div
+              key="entry"
+              className="fixed inset-0 z-[100] overflow-hidden"
+              exit={{ opacity: 0, scale: 1.06 }}
+              transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <EntryScreen onOpen={startMusic} onTransitionTrigger={revealInvitation} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Floating music toggle button (persistent across all sections) */}
@@ -137,4 +192,3 @@ function App() {
 }
 
 export default App
-

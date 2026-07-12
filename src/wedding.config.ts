@@ -18,7 +18,14 @@ export interface FunctionTheme {
   /** Name of the SVG background pattern to render (see src/theme/patterns.tsx) */
   backgroundPattern: 'mandala' | 'paisley' | 'floral' | 'jaali' | 'marigold'
   /** Ambient animated decoration layered over the section (see src/components/decorations.tsx) */
-  decoration: 'marigold-petals' | 'henna-vine' | 'gold-particles' | 'none'
+  decoration:
+    | 'marigold-petals'
+    | 'henna-vine'
+    | 'gold-particles'
+    | 'starlit-night'
+    | 'fireworks'
+    | 'rose-petals'
+    | 'none'
 }
 
 export interface WeddingFunction {
@@ -329,7 +336,7 @@ export const weddingConfig: WeddingConfig = {
         bgFrom: '#2B0E1D',
         bgTo: '#5A1F35',
         backgroundPattern: 'floral',
-        decoration: 'none',
+        decoration: 'rose-petals',
       },
     },
     {
@@ -400,7 +407,7 @@ export const weddingConfig: WeddingConfig = {
         bgFrom: '#070B1E',
         bgTo: '#232B5C',
         backgroundPattern: 'jaali',
-        decoration: 'gold-particles',
+        decoration: 'starlit-night',
       },
     },
     {
@@ -448,7 +455,7 @@ export const weddingConfig: WeddingConfig = {
         bgFrom: '#1A0620',
         bgTo: '#4A1B5C',
         backgroundPattern: 'floral',
-        decoration: 'gold-particles',
+        decoration: 'fireworks',
       },
     },
   ],

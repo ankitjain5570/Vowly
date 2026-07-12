@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, useTransform, type Variants } from 'framer-motion'
 import { weddingConfig, type WeddingFunction } from '../wedding.config'
 import { BackgroundPattern } from '../theme/patterns'
+import { SectionDecoration } from './decorations'
 import { RingExchange } from './RingExchange'
 import { useTilt } from '../hooks/useTilt'
 import { downloadICS } from '../utils/calendar'
@@ -30,6 +31,7 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
   const { nx, ny } = useTilt()
   const sceneRotateY = useTransform(nx, [-1, 1], [-6, 6])
   const sceneRotateX = useTransform(ny, [-1, 1], [5, -5])
+  const decorX = useTransform(nx, [-1, 1], [24, -24])
   const initials: [string, string] = [
     weddingConfig.couple.bride.charAt(0),
     weddingConfig.couple.groom.charAt(0),
@@ -45,6 +47,13 @@ export function EngagementSection({ fn }: { fn: WeddingFunction }) {
     >
       <BackgroundPattern pattern={theme.backgroundPattern} color={theme.accent} opacity={0.05} />
       <GodRays color={theme.accent} />
+      <motion.div className="absolute inset-0" style={{ x: decorX }}>
+        <SectionDecoration
+          decoration={theme.decoration}
+          primary={theme.primary}
+          accent={theme.accent}
+        />
+      </motion.div>
       <PalaceSilhouette windows={theme.accent} />
       <GoldDust />
       <div className="vignette" />

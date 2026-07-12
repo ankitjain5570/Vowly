@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { weddingConfig } from '../wedding.config'
+import { requestTiltPermission } from '../hooks/useTilt'
 import { GodRays, GoldDust, PalaceSilhouette } from './royal'
 
 interface EntryScreenProps {
   /** Called on the opening tap (a user gesture) — App starts the music here */
   onOpen: () => void
-  /** Called when the opening animation finishes — App swaps to the carousel */
+  /** Called when the opening animation finishes — App dissolves this screen
+   *  away over the carousel's first slide */
   onTransitionTrigger: () => void
 }
 
@@ -92,9 +94,11 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
   const handleOpen = () => {
     if (opening) return
     onOpen() // user gesture → music starts here
+    requestTiltPermission() // same gesture unlocks the gyroscope parallax on iOS
     setOpening(true)
-    // cover swing (~1.9s) + a beat to take in the inner page
-    setTimeout(onTransitionTrigger, 2700)
+    // cover swing (~2.05s) + a beat to take in the inner page, then App
+    // dissolves this screen into the first slide
+    setTimeout(onTransitionTrigger, 2600)
   }
 
   return (
@@ -121,13 +125,13 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
           {/* divine halo glow */}
           <span
             aria-hidden="true"
-            className="absolute left-1/2 top-1/2 -z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full sm:h-40 sm:w-40"
+            className="absolute left-1/2 top-1/2 -z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full sm:h-40 sm:w-40 lg:h-48 lg:w-48"
             style={{ background: 'radial-gradient(circle, rgba(232,207,122,0.4), transparent 65%)', filter: 'blur(6px)' }}
           />
           <motion.img
             src="/media/ganesha.png"
             alt="Lord Ganesha"
-            className="h-24 w-24 object-contain sm:h-28 sm:w-28"
+            className="h-24 w-24 object-contain sm:h-28 sm:w-28 lg:h-32 lg:w-32"
             style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.55))' }}
             animate={{ y: [0, -5, 0] }}
             transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
@@ -146,7 +150,7 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
           transition={{ duration: 1, delay: 0.15, ease: 'easeOut' }}
         >
         <motion.div
-          className="relative h-105 w-72 sm:h-120 sm:w-80"
+          className="relative h-105 w-72 sm:h-120 sm:w-80 lg:h-140 lg:w-94"
           animate={opening ? { y: 0 } : { y: [0, -8, 0] }}
           transition={
             opening ? { duration: 0.3 } : { duration: 4.5, repeat: Infinity, ease: 'easeInOut' }
@@ -164,7 +168,7 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
             <p className="text-[9px] uppercase tracking-[0.35em] text-[#8A6A3B]">
               Together with their families
             </p>
-            <p className="mt-3 font-heading text-4xl text-[#6B1F2F] sm:text-5xl">
+            <p className="mt-3 font-heading text-4xl text-[#6B1F2F] sm:text-5xl lg:text-6xl">
               {couple.bride}
               <span className="mx-2 italic text-[#C9A227]">&amp;</span>
               {couple.groom}
@@ -174,7 +178,7 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
               <span className="h-1.5 w-1.5 rotate-45 bg-[#C9A227]" />
               <span className="h-px flex-1 bg-[#C9A227]/60" />
             </div>
-            <p className="max-w-55 text-xs font-light italic leading-relaxed text-[#6B4A2F]">
+            <p className="max-w-55 text-xs font-light italic leading-relaxed text-[#6B4A2F] lg:max-w-72 lg:text-sm">
               {tagline}
             </p>
             <p className="mt-4 text-[10px] tracking-[0.3em] text-[#C9A227]">{hashtag}</p>
@@ -210,7 +214,7 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
               <div className="relative flex items-center justify-center">
                 <motion.svg
                   viewBox="0 0 120 120"
-                  className="h-36 w-36 text-royal-gold sm:h-40 sm:w-40"
+                  className="h-36 w-36 text-royal-gold sm:h-40 sm:w-40 lg:h-52 lg:w-52"
                   animate={{ rotate: 360 }}
                   transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
                 >
@@ -230,13 +234,13 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
                     })}
                   </g>
                 </motion.svg>
-                <span className="absolute font-heading text-3xl italic text-royal-gold-light sm:text-4xl">
+                <span className="absolute font-heading text-3xl italic text-royal-gold-light sm:text-4xl lg:text-5xl">
                   {initials}
                 </span>
               </div>
 
               <div className="px-6 text-center">
-                <p className="font-heading text-2xl text-royal-ivory sm:text-3xl">
+                <p className="font-heading text-2xl text-royal-ivory sm:text-3xl lg:text-4xl">
                   {couple.bride} <span className="italic text-royal-gold">&amp;</span>{' '}
                   {couple.groom}
                 </p>

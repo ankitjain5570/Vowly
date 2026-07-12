@@ -14,34 +14,76 @@ import { NavDots } from './NavDots'
 const SLIDE_MS = 15_000
 
 /**
- * Book page-turn transition, direction-aware. Going forward, the incoming
- * slide swings in like a page hinged on its left edge while the outgoing
- * one folds away on its right edge (mirrored going back). Brightness
- * shading during the swing sells the depth, like a real turning page.
+ * Cinematic slide transitions, VARIED per page so the journey never feels
+ * mechanical. Each slide is deterministically assigned one of four flavors
+ * (by its position), and the outgoing slide always exits in the same flavor
+ * the incoming one enters with, so every hand-off reads as one composed
+ * move:
+ *
+ *  - drift    → editorial dissolve: directional slip + gentle over-zoom
+ *  - rise     → curtain lift: the new scene floats up into place
+ *  - bloom    → through-zoom: the new scene blooms open from within
+ *  - aperture → frame reveal: a rounded window opens onto the new scene
+ *
+ * Everything is opacity/transform (plus one clip-path) — no layout work,
+ * so it stays smooth on phones — and each slide's own entrance
+ * choreography (letter reveal, staggered fade-ups) plays as it arrives.
  */
+type Flavor = 'drift' | 'rise' | 'bloom' | 'aperture'
+const FLAVORS: Flavor[] = ['drift', 'rise', 'bloom', 'aperture']
+interface SlideCustom {
+  dir: number
+  flavor: Flavor
+}
+
+const CLIP_OPEN = 'inset(0% 0% 0% 0% round 0px)'
+const ENTER_EASE = [0.22, 1, 0.36, 1] as const
+const EXIT_EASE = [0.55, 0.06, 0.45, 0.94] as const
+
 const variants: Variants = {
-  enter: (dir: number) => ({
-    rotateY: dir >= 0 ? 70 : -70,
-    x: dir >= 0 ? '10%' : '-10%',
-    opacity: 0,
-    originX: dir >= 0 ? 0 : 1,
-    filter: 'brightness(0.5)',
-  }),
-  center: {
-    rotateY: 0,
-    x: 0,
-    opacity: 1,
-    filter: 'brightness(1)',
-    transition: { duration: 1.05, ease: [0.24, 0.9, 0.32, 1] },
+  enter: ({ dir, flavor }: SlideCustom) => {
+    switch (flavor) {
+      case 'drift':
+        return { opacity: 0, x: dir >= 0 ? 64 : -64, y: 0, scale: 1.045, clipPath: CLIP_OPEN }
+      case 'rise':
+        return { opacity: 0, x: 0, y: dir >= 0 ? 90 : -90, scale: 1.03, clipPath: CLIP_OPEN }
+      case 'bloom':
+        return { opacity: 0, x: 0, y: 0, scale: 0.9, clipPath: CLIP_OPEN }
+      case 'aperture':
+        return { opacity: 0, x: 0, y: 0, scale: 1.03, clipPath: 'inset(12% 16% 12% 16% round 40px)' }
+    }
   },
-  exit: (dir: number) => ({
-    rotateY: dir >= 0 ? -70 : 70,
-    x: dir >= 0 ? '-10%' : '10%',
-    opacity: 0,
-    originX: dir >= 0 ? 1 : 0,
-    filter: 'brightness(0.5)',
-    transition: { duration: 0.8, ease: [0.55, 0.06, 0.68, 0.19] },
-  }),
+  center: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    scale: 1,
+    clipPath: CLIP_OPEN,
+    transition: {
+      duration: 1.25,
+      ease: ENTER_EASE,
+      opacity: { duration: 0.9, ease: 'easeOut' },
+      clipPath: { duration: 1.15, ease: ENTER_EASE },
+    },
+  },
+  exit: ({ dir, flavor }: SlideCustom) => {
+    const transition = {
+      duration: 0.85,
+      ease: EXIT_EASE,
+      opacity: { duration: 0.7, ease: 'easeIn' as const },
+    }
+    switch (flavor) {
+      case 'drift':
+        return { opacity: 0, x: dir >= 0 ? -64 : 64, scale: 0.985, transition }
+      case 'rise':
+        return { opacity: 0, y: dir >= 0 ? -80 : 80, scale: 0.99, transition }
+      case 'bloom':
+        return { opacity: 0, scale: 1.06, transition }
+      case 'aperture':
+        // stays put and recedes softly while the window opens over it
+        return { opacity: 0, scale: 0.965, transition: { ...transition, duration: 1.0 } }
+    }
+  },
 }
 
 /** Ornate rotated-diamond prev/next button (desktop control bar). */
@@ -147,9 +189,17 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
   // auto-advance timer (restarts on slide change / resume)
   useEffect(() => {
     if (paused || autoBlocked) return
-    const started = Date.now()
+    let started = Date.now()
+    let lastP = 0
     const t = setInterval(() => {
+      // freeze while the tab is in the background — otherwise the elapsed
+      // time keeps counting and the slide flips the moment the guest returns
+      if (document.hidden) {
+        started = Date.now() - lastP * SLIDE_MS
+        return
+      }
       const p = (Date.now() - started) / SLIDE_MS
+      lastP = p
       if (p >= 1) {
         go(index + 1, 1)
       } else {
@@ -182,11 +232,17 @@ export function InviteCarousel({ onReplayEntry }: { onReplayEntry: () => void })
   const nextLabel = slides[(index + 1) % slides.length].label
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-royal-maroon-deep" style={{ perspective: 1400 }}>
-      <AnimatePresence custom={dir} initial={false}>
+    <div className="fixed inset-0 overflow-hidden bg-royal-maroon-deep">
+      {/* the flavor is chosen by the slide being arrived at; AnimatePresence
+          forwards the same custom to the exiting slide, so both halves of
+          the hand-off animate as one composed move */}
+      <AnimatePresence
+        custom={{ dir, flavor: FLAVORS[index % FLAVORS.length] } satisfies SlideCustom}
+        initial={false}
+      >
         <motion.div
           key={slides[index].id}
-          custom={dir}
+          custom={{ dir, flavor: FLAVORS[index % FLAVORS.length] } satisfies SlideCustom}
           variants={variants}
           initial="enter"
           animate="center"

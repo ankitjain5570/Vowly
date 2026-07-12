@@ -8,6 +8,9 @@ import type { FunctionTheme } from '../wedding.config'
  *  - marigold-petals → Haldi: swaying marigold torans + turmeric dust + petals
  *  - henna-vine     → Mehendi: self-drawing peacock feathers + henna vines + leaves
  *  - gold-particles → Wedding: rotating mandala + rising sky lanterns + petal shower
+ *  - starlit-night  → Cocktail: fairy-light strings + champagne bubbles + moon + stars
+ *  - fireworks      → Reception: firework bursts + jewel confetti + gold shimmer
+ *  - rose-petals    → Engagement: blush petal drift + floating hearts + soft bokeh
  */
 
 /** Deterministic pseudo-random in [0,1) so renders are stable across mounts. */
@@ -478,8 +481,7 @@ function GoldParticles({ color }: { color: string }) {
 }
 
 /** Rose/gold petals tumbling down with a faked 3D flip. */
-function PetalShower() {
-  const colors = ['#8C2B3D', '#C9A227', '#D98A96']
+function PetalShower({ colors = ['#8C2B3D', '#C9A227', '#D98A96'] }: { colors?: string[] }) {
   return (
     <>
       {Array.from({ length: 9 }).map((_, i) => (
@@ -527,6 +529,356 @@ function WeddingScene({ primary, accent }: { primary: string; accent: string }) 
   )
 }
 
+/* =============================== COCKTAIL =============================== */
+
+/** Sagging strings of fairy lights across the top, bulbs twinkling. */
+function FairyLights({ primary, accent }: { primary: string; accent: string }) {
+  const strands = [
+    { y0: 8, y1: 22, sag: 42, bulbs: 11 },
+    { y0: 30, y1: 12, sag: 58, bulbs: 13 },
+  ]
+  return (
+    <div className="absolute inset-x-0 top-0 h-28 sm:h-36">
+      {strands.map((s, si) => {
+        // points along the sagging wire, in 0–100 viewbox space
+        const pts = Array.from({ length: s.bulbs }, (_, i) => {
+          const t = i / (s.bulbs - 1)
+          return { t, x: t * 100, y: s.y0 + (s.y1 - s.y0) * t + Math.sin(Math.PI * t) * s.sag }
+        })
+        const wire = pts
+          .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+          .join(' ')
+        return (
+          <div key={si} className="absolute inset-0">
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              className="absolute inset-0 h-full w-full"
+            >
+              <path d={wire} fill="none" stroke={`${accent}50`} strokeWidth="0.4" />
+            </svg>
+            {pts.map((p, i) => {
+              const size = 4 + prand(i, 101 + si) * 3
+              const color = i % 3 === si % 3 ? primary : accent
+              return (
+                <motion.span
+                  key={i}
+                  style={{
+                    position: 'absolute',
+                    left: `${p.x}%`,
+                    top: `${p.y}%`,
+                    width: size,
+                    height: size,
+                    marginLeft: -size / 2,
+                    borderRadius: '50%',
+                    backgroundColor: color,
+                    boxShadow: `0 0 ${size * 2.5}px ${color}`,
+                  }}
+                  animate={{ opacity: [0.35, 1, 0.35] }}
+                  transition={{
+                    duration: 1.8 + prand(i, 103 + si) * 2.4,
+                    delay: prand(i, 104 + si) * 3,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                />
+              )
+            })}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Champagne bubbles drifting up with a glassy highlight. */
+function ChampagneBubbles({ color }: { color: string }) {
+  return (
+    <>
+      {Array.from({ length: 14 }).map((_, i) => {
+        const size = 4 + prand(i, 111) * 10
+        return (
+          <motion.span
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${prand(i, 112) * 100}%`,
+              bottom: -16,
+              width: size,
+              height: size,
+              borderRadius: '50%',
+              border: `1px solid ${color}66`,
+              background: `radial-gradient(circle at 32% 30%, #ffffff55, ${color}22 60%, transparent)`,
+            }}
+            animate={{ y: ['0vh', '-108vh'], x: [0, 14, -10, 0], opacity: [0, 0.9, 0.9, 0] }}
+            transition={{
+              duration: 9 + prand(i, 113) * 8,
+              delay: prand(i, 114) * 9,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+          />
+        )
+      })}
+    </>
+  )
+}
+
+/** Four-point sparkle stars twinkling in the upper sky. */
+function TwinkleStars({ color }: { color: string }) {
+  return (
+    <>
+      {Array.from({ length: 16 }).map((_, i) => {
+        const size = 5 + prand(i, 121) * 9
+        return (
+          <motion.svg
+            key={i}
+            viewBox="0 0 20 20"
+            style={{
+              position: 'absolute',
+              left: `${prand(i, 122) * 100}%`,
+              top: `${2 + prand(i, 123) * 55}%`,
+              width: size,
+            }}
+            animate={{ opacity: [0.1, 0.9, 0.1], scale: [0.7, 1.15, 0.7] }}
+            transition={{
+              duration: 2.5 + prand(i, 124) * 3,
+              delay: prand(i, 125) * 4,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          >
+            <path
+              d="M10 0 Q 11.5 8.5 20 10 Q 11.5 11.5 10 20 Q 8.5 11.5 0 10 Q 8.5 8.5 10 0"
+              fill={color}
+            />
+          </motion.svg>
+        )
+      })}
+    </>
+  )
+}
+
+/** A softly glowing crescent moon, bobbing gently. */
+function CrescentMoon() {
+  return (
+    <motion.svg
+      viewBox="0 0 60 60"
+      className="absolute right-[8%] top-[9%] w-12 sm:w-16"
+      style={{ filter: 'drop-shadow(0 0 18px rgba(232,207,122,0.5))' }}
+      animate={{ y: [0, -6, 0] }}
+      transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      <path d="M46 8 A 24 24 0 1 0 46 52 A 30 30 0 0 1 46 8" fill="#F5E08A" opacity="0.85" />
+    </motion.svg>
+  )
+}
+
+function CocktailScene({ primary, accent }: { primary: string; accent: string }) {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      <CrescentMoon />
+      <TwinkleStars color={primary} />
+      <FairyLights primary={primary} accent={accent} />
+      <ChampagneBubbles color={accent} />
+    </div>
+  )
+}
+
+/* ============================== RECEPTION =============================== */
+
+/** One repeating firework burst: rays shooting out with ember tips. */
+function FireworkBurst({
+  x,
+  y,
+  size,
+  color,
+  delay,
+}: {
+  x: number
+  y: number
+  size: number
+  color: string
+  delay: number
+}) {
+  const RAYS = 12
+  return (
+    <motion.svg
+      viewBox="-50 -50 100 100"
+      style={{ position: 'absolute', left: `${x}%`, top: `${y}%`, width: size, height: size }}
+      initial={{ opacity: 0, scale: 0.1 }}
+      animate={{ opacity: [0, 1, 0.9, 0], scale: [0.1, 0.9, 1.1, 1.2] }}
+      transition={{ duration: 2, delay, repeat: Infinity, repeatDelay: 4.4, ease: 'easeOut' }}
+    >
+      {Array.from({ length: RAYS }).map((_, i) => {
+        const a = (i * 2 * Math.PI) / RAYS
+        const r = i % 2 ? 45 : 34
+        const cos = Math.cos(a)
+        const sin = Math.sin(a)
+        return (
+          <g key={i}>
+            <line
+              x1={cos * 9}
+              y1={sin * 9}
+              x2={cos * r}
+              y2={sin * r}
+              stroke={color}
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              opacity="0.8"
+            />
+            <circle cx={cos * r} cy={sin * r} r="2" fill={color} />
+          </g>
+        )
+      })}
+      <circle cx="0" cy="0" r="3.5" fill="#fff" opacity="0.9" />
+    </motion.svg>
+  )
+}
+
+/** Jewel-toned confetti tumbling down with a 3D ribbon flip. */
+function Confetti({ colors }: { colors: string[] }) {
+  return (
+    <>
+      {Array.from({ length: 14 }).map((_, i) => {
+        const w = 5 + prand(i, 131) * 5
+        return (
+          <motion.span
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${prand(i, 132) * 100}%`,
+              top: -16,
+              width: w,
+              height: w * 1.6,
+              borderRadius: 1,
+              backgroundColor: colors[i % colors.length],
+              opacity: 0.8,
+            }}
+            animate={{
+              y: ['0vh', '112vh'],
+              x: [0, 26, -18, 0],
+              rotate: [0, 260, 420],
+              scaleY: [1, 0.3, 1, 0.4, 1],
+            }}
+            transition={{
+              duration: 8 + prand(i, 133) * 7,
+              delay: prand(i, 134) * 8,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+          />
+        )
+      })}
+    </>
+  )
+}
+
+function ReceptionScene({ primary, accent }: { primary: string; accent: string }) {
+  const bursts = [
+    { x: 16, y: 16, size: 120, color: primary, delay: 0.6 },
+    { x: 74, y: 10, size: 150, color: accent, delay: 2.6 },
+    { x: 46, y: 26, size: 96, color: '#D98A96', delay: 4.6 },
+    { x: 88, y: 30, size: 110, color: primary, delay: 6.2 },
+  ]
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      {bursts.map((b, i) => (
+        <FireworkBurst key={i} {...b} />
+      ))}
+      <Confetti colors={[primary, accent, '#D98A96', '#8FCBB0']} />
+      <GoldParticles color={accent} />
+    </div>
+  )
+}
+
+/* ============================== ENGAGEMENT ============================== */
+
+/** Soft out-of-focus light orbs drifting slowly — a candlelit haze. */
+function SoftBokeh({ primary, accent }: { primary: string; accent: string }) {
+  return (
+    <>
+      {Array.from({ length: 8 }).map((_, i) => {
+        const size = 40 + prand(i, 141) * 90
+        const color = i % 2 ? primary : accent
+        return (
+          <motion.span
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${prand(i, 142) * 100}%`,
+              top: `${prand(i, 143) * 90}%`,
+              width: size,
+              height: size,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${color}2e, transparent 70%)`,
+              filter: 'blur(6px)',
+            }}
+            animate={{ y: [0, -30, 0], x: [0, 18, 0], opacity: [0.25, 0.6, 0.25] }}
+            transition={{
+              duration: 11 + prand(i, 144) * 9,
+              delay: prand(i, 145) * 6,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        )
+      })}
+    </>
+  )
+}
+
+/** Small glowing hearts rising like sparks from a flame. */
+function FloatingHearts({ color }: { color: string }) {
+  return (
+    <>
+      {Array.from({ length: 7 }).map((_, i) => {
+        const size = 10 + prand(i, 151) * 12
+        return (
+          <motion.svg
+            key={i}
+            viewBox="0 0 20 20"
+            style={{
+              position: 'absolute',
+              left: `${8 + prand(i, 152) * 84}%`,
+              bottom: -22,
+              width: size,
+              filter: `drop-shadow(0 0 6px ${color}aa)`,
+            }}
+            animate={{
+              y: ['0vh', '-105vh'],
+              x: [0, 16, -12, 0],
+              rotate: [-8, 8, -8],
+              opacity: [0, 0.85, 0.7, 0],
+            }}
+            transition={{
+              duration: 12 + prand(i, 153) * 8,
+              delay: prand(i, 154) * 11,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+          >
+            <path
+              d="M10 17 C 3 11 1 7 3.5 4.5 C 6 2 9 3.5 10 6 C 11 3.5 14 2 16.5 4.5 C 19 7 17 11 10 17"
+              fill={color}
+            />
+          </motion.svg>
+        )
+      })}
+    </>
+  )
+}
+
+function EngagementScene({ primary, accent }: { primary: string; accent: string }) {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      <SoftBokeh primary={primary} accent={accent} />
+      <PetalShower colors={[primary, '#D9748A', accent]} />
+      <FloatingHearts color={primary} />
+    </div>
+  )
+}
+
 /* ================================ EXPORT ================================ */
 
 /** Renders the scene named in a function's theme config. */
@@ -546,6 +898,12 @@ export function SectionDecoration({
       return <MehendiScene primary={primary} />
     case 'gold-particles':
       return <WeddingScene primary={primary} accent={accent} />
+    case 'starlit-night':
+      return <CocktailScene primary={primary} accent={accent} />
+    case 'fireworks':
+      return <ReceptionScene primary={primary} accent={accent} />
+    case 'rose-petals':
+      return <EngagementScene primary={primary} accent={accent} />
     case 'none':
       return null
   }
