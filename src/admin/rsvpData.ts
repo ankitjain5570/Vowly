@@ -1,32 +1,14 @@
 import { weddingConfig } from '../wedding.config'
+import type { RsvpRecord, RsvpStatus } from './data/types'
 
 /**
- * RSVP data layer.
- *
- * Today this returns dummy records so the dashboard is fully functional
- * without a backend. When Supabase is connected, replace the body of
- * `getRsvps()` with a query (e.g. `supabase.from('rsvps').select()`), keep
- * the RsvpRecord shape, and the whole dashboard keeps working unchanged.
+ * Sample RSVP data used as the LOCAL-fallback seed (when Supabase isn't
+ * configured). The canonical RsvpRecord/RsvpStatus types now live in
+ * ./data/types and are re-exported here so existing imports keep working.
+ * When Supabase is connected, `rsvpService.listRsvps()` returns real rows of
+ * the same shape and the whole dashboard keeps working unchanged.
  */
-
-export type RsvpStatus = 'confirmed' | 'pending' | 'declined'
-
-export interface RsvpRecord {
-  id: string
-  /** Primary guest name */
-  name: string
-  phone: string
-  /** Total headcount incl. the primary guest */
-  partySize: number
-  /** Additional guests travelling with the primary */
-  guests: string[]
-  /** Function ids the party is attending (see weddingConfig.functions) */
-  functions: string[]
-  status: RsvpStatus
-  message?: string
-  /** ISO timestamp of submission */
-  submittedAt: string
-}
+export type { RsvpRecord, RsvpStatus }
 
 /** Human-readable function name for a function id. */
 export function functionName(id: string): string {
@@ -186,7 +168,7 @@ const DUMMY: RsvpRecord[] = [
   },
 ]
 
-/** Fetch all RSVPs. Swap the return for a Supabase query when ready. */
+/** Deep copy of the sample RSVPs — the local-fallback seed. */
 export function getRsvps(): RsvpRecord[] {
   return DUMMY.map((r) => ({ ...r, guests: [...r.guests], functions: [...r.functions] }))
 }

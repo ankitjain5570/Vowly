@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { weddingConfig } from '../wedding.config'
 import { requestTiltPermission } from '../hooks/useTilt'
@@ -89,6 +89,18 @@ function OpeningBurst() {
 export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
   const { couple, tagline, hashtag } = weddingConfig
   const [opening, setOpening] = useState(false)
+  // On phones the closed book is nearly full-width, so swinging the cover a
+  // full 152° would run the open spread off the left edge. We shrink the book
+  // as it opens (only on mobile) so the whole spread stays centered on screen.
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)')
+    const onChange = () => setIsMobile(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
   const initials = `${couple.bride.charAt(0)}&${couple.groom.charAt(0)}`
 
   const handleOpen = () => {
@@ -151,9 +163,14 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
         >
         <motion.div
           className="relative h-105 w-72 sm:h-120 sm:w-80 lg:h-140 lg:w-94"
-          animate={opening ? { y: 0 } : { y: [0, -8, 0] }}
+          style={{ transformOrigin: 'center center' }}
+          animate={
+            opening ? { y: 0, scale: isMobile ? 0.7 : 1 } : { y: [0, -8, 0], scale: 1 }
+          }
           transition={
-            opening ? { duration: 0.3 } : { duration: 4.5, repeat: Infinity, ease: 'easeInOut' }
+            opening
+              ? { duration: 1.8, ease: [0.4, 0, 0.2, 1] }
+              : { duration: 4.5, repeat: Infinity, ease: 'easeInOut' }
           }
         >
           {/* -------- inner page (revealed when the cover opens) -------- */}
@@ -168,9 +185,9 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
             <p className="text-[9px] uppercase tracking-[0.35em] text-[#8A6A3B]">
               Together with their families
             </p>
-            <p className="mt-3 font-heading text-4xl text-[#6B1F2F] sm:text-5xl lg:text-6xl">
+            <p className="mt-3 max-w-full px-1 font-heading text-4xl leading-tight text-[#6B1F2F] sm:text-5xl">
               {couple.bride}
-              <span className="mx-2 italic text-[#C9A227]">&amp;</span>
+              <span className="mx-1.5 italic text-[#C9A227]">&amp;</span>
               {couple.groom}
             </p>
             <div className="mx-auto my-4 flex w-32 items-center gap-2">
@@ -188,7 +205,7 @@ export function EntryScreen({ onOpen, onTransitionTrigger }: EntryScreenProps) {
           <motion.div
             className="absolute inset-0"
             style={{ transformOrigin: 'left center', transformStyle: 'preserve-3d' }}
-            animate={{ rotateY: opening ? -152 : 0 }}
+            animate={{ rotateY: opening ? (isMobile ? -112 : -152) : 0 }}
             transition={{ duration: 1.9, delay: opening ? 0.15 : 0, ease: [0.65, 0, 0.35, 1] }}
           >
             {/* cover front */}

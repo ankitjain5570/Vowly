@@ -17,7 +17,9 @@ customer's answers to `CUSTOMER-INTAKE.md`.
 - **React 19 + TypeScript + Vite** (build tool / dev server)
 - **Tailwind CSS v4** (via the `@tailwindcss/vite` plugin; theme tokens in `src/index.css`)
 - **Framer Motion** for all animation
-- **No router library.** Routing is decided in `src/main.tsx` by inspecting `window.location.pathname` (see §4).
+- **No router library.** Routing is decided in `src/main.tsx` by inspecting `window.location.pathname` (see §4). The `/admin` console is **lazy-loaded** (its own chunk) so guests never download it, Supabase, or xlsx.
+- **Supabase** (`@supabase/supabase-js`) backs the admin console when configured (accounts, roles, guests, RSVPs); without env vars it falls back to browser-local storage. See §6.
+- **SheetJS (`xlsx`)** for guest-list import (.xlsx/.xls/.csv) and RSVP/guest Excel export (admin only).
 - Fonts: **Cormorant Garamond** (headings) + **Jost** (body), loaded from Google Fonts in `index.html`.
 
 ```bash
@@ -61,24 +63,37 @@ src/
     Countdown.tsx          # live countdown (wedding hero)
     Footer.tsx             # ⚠ legacy, currently UNUSED (sign-off now lives in RSVPSection)
 
-  admin/                   # the /admin console (see §6)
-    AdminApp.tsx           # login gate + top nav + view switch
-    AdminLogin.tsx         # placeholder login form
-    auth.ts                # ⚠ placeholder credentials (replace with Supabase Auth)
+  admin/                   # the /admin console (see §6) — lazy-loaded chunk
+    AdminApp.tsx           # session load + role gating + sidebar shell + view switch
+    AuthScreen.tsx         # sign-in / sign-up (Supabase auth, or local fallback)
+    Team.tsx               # ⭐ superuser: approve/deny sign-ups, promote/demote roles
+    Guests.tsx             # ⭐ guest list: CSV/Excel import, add/edit, export, RSVP status
     Overview.tsx           # KPI tiles + per-celebration headcount + latest RSVPs
-    Dashboard.tsx          # RSVP data: List tab + Kanban Board tab + filters
+    Dashboard.tsx          # RSVP data: List tab + Kanban Board tab + filters + Excel export
     RsvpTable.tsx          # list view
     RsvpBoard.tsx          # kanban view (drag/tap to move between statuses)
-    rsvpData.ts            # ⚠ DUMMY RSVP data (replace getRsvps() with Supabase)
-    inviteLinks.ts         # saved custom links (localStorage; replace with Supabase)
+    rsvpData.ts            # sample RSVPs = local-fallback seed; re-exports canonical types
+    inviteLinks.ts         # saved custom links (localStorage; move to Supabase later)
     InviteBuilder.tsx      # UI to compose custom section-limited invite links
     ui.tsx                 # shared admin bits: status palette, badges, chips
+    data/                  # ⭐ backend-agnostic data layer (Supabase OR local fallback)
+      types.ts             #   Profile/Role, Guest/NewGuest, RsvpRecord/RsvpStatus
+      authService.ts       #   signUp/signIn/signOut, profiles, setRole, removeUser
+      guestService.ts      #   guest CRUD + bulk import
+      rsvpService.ts       #   list RSVPs + update status
+      local.ts             #   localStorage helpers for the no-Supabase fallback
+
+  lib/supabase.ts          # Supabase client + isSupabaseConfigured flag (env-driven)
 
   hooks/
     useTilt.ts             # parallax (3D tilt): mouse on desktop, gyroscope on phones
     useActiveSection.ts    # (legacy scroll helper; carousel drives active slide now)
   theme/patterns.tsx       # SVG background patterns (mandala/paisley/floral/jaali/marigold)
   utils/calendar.ts        # generates .ics files for "Add to Calendar"
+  utils/excel.ts           # guest-list import parsing + RSVP/guest Excel export (xlsx)
+
+supabase/schema.sql        # ⭐ run once in Supabase SQL Editor: tables, RLS, superuser trigger
+.env.example               # copy to .env; VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
 
 public/
   _redirects               # Netlify SPA fallback (keep!)
@@ -130,18 +145,26 @@ The carousel, nav, and RSVP form all consume it, so limiting sections is automat
 
 Supported URL forms:
 
+Custom links are **exclusion-based**: the full invitation is the clean
+default, and a link only encodes the sections a guest should NOT see. So the
+link is shortest when the most is included — everything selected is just `/`,
+and each section you *remove* adds one short code.
+
 | URL | Result |
 |-----|--------|
-| `/` | Full invitation (everything) |
-| `/i/<code-code-code>` | **Custom link** built in the admin console. Section ids are encoded as **opaque codes** so guests can't read or tamper with their invite. |
-| `/?invite=<slug>` | Named preset from `weddingConfig.invites` |
-| `/?events=haldi,wedding&extras=story,info` | Ad-hoc combination (plain ids) |
+| `/` | Full invitation (nothing excluded) |
+| `/i/<code>` | Full invitation **minus** that one section |
+| `/i/<code>-<code>` | Full **minus** those sections. Codes are **opaque** so guests can't read or tamper with what was dropped. |
+| `/?invite=<slug>` | Named preset from `weddingConfig.invites` (inclusion list) |
+| `/?events=haldi,wedding&extras=story,info` | Ad-hoc combination (inclusion, plain ids) |
 
 **Opaque codes:** each section id (`engagement`, `haldi`, …, plus extras
-`story`/`photobook`/`info`/`wishes`) maps to a stable 5-char code via `codeFor()`
-using `CODE_SALT` (currently `'vowly-2026'`). Changing `CODE_SALT` rotates every
-code and invalidates old custom links. `buildInvitePath()` / `buildInviteUrl()`
-generate links; the admin **Invite Builder** uses them.
+`story`/`photobook`/`info`/`wishes`) maps to a stable, unique **3-char** code
+derived from the id + `CODE_SALT` (currently `'vowly-2026'`); rare hash
+collisions are auto-resolved deterministically. Changing `CODE_SALT` rotates
+every code and invalidates old custom links. `buildInvitePath()` /
+`buildInviteUrl()` take the *selected* ids and emit the excluded codes; the
+admin **Invite Builder** uses them.
 
 Unknown/garbage links **fail open to the full invitation** (never a broken page).
 This is obfuscation, not security — the full invite is still public at `/`.
@@ -178,22 +201,42 @@ When resizing images, ~900px wide JPEG at ~85% quality is a good target for phon
 
 ## 6. Admin console (`/admin`)
 
-- Reached only at the `/admin` path; guests never see it. Gated by
-  `AdminLogin.tsx` using **placeholder** credentials in `src/admin/auth.ts`
-  (`DEMO_USER` / `DEMO_PASSWORD`, currently `admin` / `vowly2026`).
-  ⚠ This is client-side only — **not real security**. Replace with Supabase Auth
-  before real guest data is stored.
-- **Overview**: KPI stat tiles, per-celebration expected headcount, latest RSVPs.
-- **Dashboard**: RSVP records in a **List** tab (sortable/searchable table) and a
-  **Board** tab (Kanban: Pending / Confirmed / Declined, drag or tap to move).
-- **Invites**: the Invite Builder — toggle functions + extra sections, generate a
-  copyable opaque `/i/<code>` link, preview it, and save it (localStorage).
+Reached only at the `/admin` path (lazy-loaded chunk); guests never see it.
 
-**Data is DUMMY.** `src/admin/rsvpData.ts` `getRsvps()` returns hardcoded sample
-RSVPs (shape = `RsvpRecord`). To go live, replace that function body with a
-Supabase query and replace `login()` in `auth.ts` with `supabase.auth`. The RSVP
-form payload in `RSVPModal.tsx` already carries `attending: true/false` (+ decline
-`note`), which map to the dashboard's `confirmed`/`declined` statuses and `message`.
+**Two backends, one API.** Every admin data call goes through `src/admin/data/*`,
+which checks `isSupabaseConfigured` (`src/lib/supabase.ts`) and either hits
+Supabase or a **localStorage fallback**. So the console is fully usable for
+preview on one device with **no** setup, and becomes real + multi-user the
+moment Supabase env vars are present — no UI changes.
+
+**Going live (Supabase):**
+1. Create a free project at supabase.com.
+2. SQL Editor → paste & run `supabase/schema.sql` (creates `profiles`,
+   `guests`, `rsvps`, RLS policies, and a trigger that auto-creates a profile
+   on signup).
+3. Copy `.env.example` → `.env`, fill `VITE_SUPABASE_URL` +
+   `VITE_SUPABASE_ANON_KEY` (Project Settings → API), restart `npm run dev`.
+
+**Auth & roles** (`data/authService.ts`, `AuthScreen.tsx`, `Team.tsx`):
+- Real sign-up / sign-in. New accounts start **`pending`** (see a "waiting for
+  approval" screen) until a superuser approves them → **`admin`**.
+- **`superuser`** also gets the **Team** view to approve/deny sign-ups and
+  promote/demote/remove members. The email `SUPERUSER_EMAIL`
+  (`buildwithankitusingai@gmail.com`, in `authService.ts` **and**
+  `schema.sql` — keep them in sync) is auto-elevated to superuser on signup.
+- Local-fallback mode simulates all of this in localStorage (⚠ passwords stored
+  in the clear — preview only, never for real guest data).
+
+**Views:** Overview (KPIs) · **RSVPs** dashboard (List + Kanban + **Export
+Excel**) · **Guests** (import CSV/Excel, add/edit, export, per-guest RSVP
+status) · Invites (the exclusion-based link builder, §4) · **Team** (superuser).
+
+**Guests & RSVPs:** `guests` and `rsvps` are separate tables linked by
+`rsvps.guest_id` (or matched by name in the UI). Guest import (`utils/excel.ts`)
+is forgiving about column headers (name/family/side/phone/email/max guests/
+invited-to/notes). The public RSVP form (`RSVPModal.tsx`) still stores locally
+today — wiring its submit to `supabase.from('rsvps').insert(...)` is the last
+step to close the loop (the anon-insert RLS policy already allows it).
 
 ---
 
@@ -266,7 +309,10 @@ update the config paths to match new names. Music can be `.mp3` or `.m4a` — se
 custom links will instead be generated in the admin **Invite Builder** (opaque
 `/i/<code>` links), which needs no config edit.
 
-**J. Admin credentials** → `src/admin/auth.ts` (until Supabase).
+**J. Admin access** → set up Supabase (§6) and change `SUPERUSER_EMAIL` in both
+`src/admin/data/authService.ts` and `supabase/schema.sql` to the couple's/
+planner's email. Without Supabase env vars the console runs in local preview
+mode (single device, not shared).
 
 **K. Colors/vibe** → per-function `theme` blocks + global tokens in `src/index.css`.
 

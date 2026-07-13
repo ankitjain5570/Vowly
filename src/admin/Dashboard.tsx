@@ -3,6 +3,7 @@ import type { RsvpRecord, RsvpStatus } from './rsvpData'
 import { RsvpTable } from './RsvpTable'
 import { RsvpBoard } from './RsvpBoard'
 import { STATUS_META, STATUS_ORDER } from './ui'
+import { exportRsvpsToExcel } from '../utils/excel'
 
 type Tab = 'list' | 'board'
 type StatusFilter = RsvpStatus | 'all'
@@ -36,8 +37,18 @@ export function Dashboard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-heading text-3xl text-royal-ivory">RSVP Dashboard</h1>
 
-        {/* view tabs */}
-        <div className="inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={records.length === 0}
+            onClick={() => exportRsvpsToExcel(records)}
+            className="cursor-pointer rounded-full border border-white/15 px-4 py-1.5 text-xs uppercase tracking-[0.12em] text-royal-ivory/80 transition-colors hover:bg-white/5 disabled:opacity-40"
+          >
+            Export Excel
+          </button>
+
+          {/* view tabs */}
+          <div className="inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1">
           {(['list', 'board'] as Tab[]).map((t) => (
             <button
               key={t}
@@ -51,6 +62,7 @@ export function Dashboard({
               {t === 'list' ? 'List' : 'Board'}
             </button>
           ))}
+          </div>
         </div>
       </div>
 

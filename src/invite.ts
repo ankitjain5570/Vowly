@@ -8,15 +8,21 @@ import { weddingConfig, type ExtraSlideId, type WeddingFunction } from './weddin
  * downstream (the carousel, nav dots, RSVP form) just consumes a
  * ResolvedInvite.
  *
- * Supported URLs today (all work as plain shareable links, no login):
- *   /                                        → full invitation
- *   /i/engagement-wedding                    → path-based custom link (admin-built)
- *   /i/haldi-mehendi-story-info              → functions + chosen extra sections
- *   /?invite=shaadi                          → named preset from config
- *   /?events=haldi,wedding                   → ad-hoc function combination
- *   /?events=cocktail&extras=info,wishes     → ad-hoc, limited extras
+ * Custom links are EXCLUSION-based: the full invitation is the clean default
+ * ("/"), and a custom link only encodes the sections a guest should NOT see.
+ * So the more you include the shorter the link — everything selected is just
+ * "/", and removing a section adds one short code. Codes are opaque so a
+ * guest can't read or tamper with which sections were dropped.
  *
- * Unknown slugs/ids fail open to the full invitation, so a mistyped link
+ * Supported URLs today (all work as plain shareable links, no login):
+ *   /                                        → full invitation (nothing excluded)
+ *   /i/<code>                                → full invitation minus one section
+ *   /i/<code>-<code>                         → full minus those sections
+ *   /?invite=shaadi                          → named preset from config (inclusion list)
+ *   /?events=haldi,wedding                   → ad-hoc function combination (inclusion)
+ *   /?events=cocktail&extras=info,wishes     → ad-hoc, limited extras (inclusion)
+ *
+ * Unknown codes/ids fail open to the full invitation, so a mistyped link
  * never shows a guest a broken page.
  */
 
@@ -37,10 +43,6 @@ export const EXTRA_LABELS: Record<ExtraSlideId, string> = {
   wishes: 'Wishes / Guestbook',
 }
 
-function isExtra(value: string): value is ExtraSlideId {
-  return (ALL_EXTRAS as string[]).includes(value)
-}
-
 /**
  * Opaque per-section codes so a shared link never reveals which sections a
  * guest was given, and can't be hand-tampered into another combination.
@@ -51,22 +53,39 @@ function isExtra(value: string): value is ExtraSlideId {
  */
 const CODE_SALT = 'vowly-2026'
 
-function codeFor(id: string): string {
-  // FNV-1a hash → bounded base36, 5 chars (e.g. "k7x2m")
+/** Raw FNV-1a hash of a string → base36 3-char code (36³ = 46 656 combos). */
+function rawCode(s: string): string {
   let h = 2166136261 >>> 0
-  const s = `${CODE_SALT}|${id}`
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i)
     h = Math.imul(h, 16777619) >>> 0
   }
-  return (h % 60466176).toString(36).padStart(5, '0')
+  return (h % 46656).toString(36).padStart(3, '0')
 }
 
 const SECTION_IDS = [...weddingConfig.functions.map((f) => f.id), ...ALL_EXTRAS]
-const CODE_TO_ID = new Map(SECTION_IDS.map((id) => [codeFor(id), id]))
 const KNOWN_IDS = new Set(SECTION_IDS)
 
-/** Decode one path token: an opaque code, or a plain id (legacy fallback). */
+/**
+ * Assign each section a stable, unique 3-char code. 3 chars is a small space,
+ * so on the rare hash collision we deterministically re-hash with a suffix.
+ * Iterating a *sorted* id list keeps codes stable regardless of config order.
+ */
+const ID_TO_CODE = new Map<string, string>()
+const CODE_TO_ID = new Map<string, string>()
+for (const id of [...SECTION_IDS].sort()) {
+  let code = rawCode(`${CODE_SALT}|${id}`)
+  let n = 0
+  while (CODE_TO_ID.has(code)) code = rawCode(`${CODE_SALT}|${id}#${++n}`)
+  ID_TO_CODE.set(id, code)
+  CODE_TO_ID.set(code, id)
+}
+
+function codeFor(id: string): string {
+  return ID_TO_CODE.get(id) ?? rawCode(`${CODE_SALT}|${id}`)
+}
+
+/** Decode one path token: an opaque code, or a plain id (dev fallback). */
 function tokenToId(token: string): string | null {
   return CODE_TO_ID.get(token) ?? (KNOWN_IDS.has(token) ? token : null)
 }
@@ -93,17 +112,21 @@ function fullInvite(): ResolvedInvite {
 }
 
 /**
- * Build a shareable custom invite link from selected section ids. Each
- * section is emitted as an opaque code so the link doesn't reveal which
- * sections it contains:
- *   buildInvitePath(['engagement','wedding'], ['info']) → "/i/k7x2m-p3rqz-y7wsb"
- * Functions come first (config order), then extras (canonical order).
+ * Build a shareable custom invite link from the SELECTED section ids. The
+ * link encodes only what's EXCLUDED, so a full selection is the clean "/"
+ * and each removed section adds one opaque 3-char code:
+ *   all selected                          → "/"
+ *   everything but reception              → "/i/k7x"
+ *   everything but reception + story      → "/i/k7x-p3r"
+ * Order follows config (functions first, then extras) for stable links.
  */
 export function buildInvitePath(functionIds: string[], extraIds: string[]): string {
-  const fns = weddingConfig.functions.filter((f) => functionIds.includes(f.id)).map((f) => f.id)
-  const extras = orderExtras(extraIds)
-  const tokens = [...fns, ...extras].map(codeFor)
-  return tokens.length ? `/i/${tokens.join('-')}` : '/'
+  const excludedFns = weddingConfig.functions
+    .filter((f) => !functionIds.includes(f.id))
+    .map((f) => f.id)
+  const excludedExtras = ALL_EXTRAS.filter((e) => !extraIds.includes(e))
+  const excluded = [...excludedFns, ...excludedExtras]
+  return excluded.length ? `/i/${excluded.map(codeFor).join('-')}` : '/'
 }
 
 /** Absolute URL for a custom link, for copy/share. */
@@ -116,22 +139,26 @@ export function resolveInvite(
   search: string = typeof window !== 'undefined' ? window.location.search : '',
   pathname: string = typeof window !== 'undefined' ? window.location.pathname : '',
 ): ResolvedInvite {
-  // 0. Path-based custom link: /i/<code-code-code>
+  // 0. Path-based custom link: /i/<code-code> — codes are the EXCLUDED
+  //    sections; the guest sees everything else. Full invite is just "/".
   const pathMatch = pathname.match(/\/i\/([^/]+)\/?$/)
   if (pathMatch) {
-    const ids = decodeURIComponent(pathMatch[1])
-      .split(/[-,+]/)
-      .map((t) => t.trim().toLowerCase())
-      .filter(Boolean)
-      .map(tokenToId)
-      .filter((x): x is string => Boolean(x))
-    const functions = weddingConfig.functions.filter((f) => ids.includes(f.id))
+    const excluded = new Set(
+      decodeURIComponent(pathMatch[1])
+        .split(/[-,+]/)
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean)
+        .map(tokenToId)
+        .filter((x): x is string => Boolean(x)),
+    )
+    const functions = weddingConfig.functions.filter((f) => !excluded.has(f.id))
+    // At least one celebration must remain, else fail open to the full invite.
     if (functions.length > 0) {
       return {
         slug: 'custom',
         label: 'Custom Invitation',
         functions,
-        extras: orderExtras(ids.filter(isExtra)),
+        extras: ALL_EXTRAS.filter((e) => !excluded.has(e)),
       }
     }
   }

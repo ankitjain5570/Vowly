@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Local env with real secrets (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
 # Raw source assets (already copied into public/media; Photobook/ IS tracked)
 Audio File/
 Couple Photos/
